@@ -1,0 +1,210 @@
+{
+    "widgets": [
+        {
+            "height": 6,
+            "width": 6,
+            "y": 0,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ "AWS/ApplicationELB", "RequestCount", "LoadBalancer", "app/useast1-alb/4e8509f9a8e03822" ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Sum",
+                "period": 60,
+                "title": "US-RequestCount"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 0,
+            "x": 6,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "(m2+m3)/m1*100", "label": "ErrorRate", "id": "e1", "region": "us-east-1" } ],
+                    [ "AWS/ApplicationELB", "RequestCount", "LoadBalancer", "app/useast1-alb/4e8509f9a8e03822", { "id": "m1", "visible": false } ],
+                    [ ".", "HTTPCode_Target_4XX_Count", ".", ".", { "id": "m2", "visible": false } ],
+                    [ ".", "HTTPCode_ELB_4XX_Count", ".", ".", { "id": "m3", "visible": false } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Sum",
+                "period": 60,
+                "title": "US-4XXErrorRate",
+                "annotations": {
+                    "horizontal": [
+                        {
+                            "label": "Error High",
+                            "value": 5
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 0,
+            "x": 18,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ "AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", "app/useast1-alb/4e8509f9a8e03822" ],
+                    [ "...", { "stat": "p99" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "US-ResponseTime",
+                "annotations": {
+                    "horizontal": [
+                        {
+                            "label": "Duration High",
+                            "value": 0.5
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 6,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ "AWS/ApplicationELB", "RequestCount", "LoadBalancer", "app/apnortheast2-alb/62d68cbb46cd0114" ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "ap-northeast-2",
+                "stat": "Sum",
+                "period": 60,
+                "title": "AP-RequestCount"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 6,
+            "x": 6,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "(m2+m3)/m1*100", "label": "ErrorRate", "id": "e1", "region": "ap-northeast-2" } ],
+                    [ "AWS/ApplicationELB", "RequestCount", "LoadBalancer", "app/apnortheast2-alb/62d68cbb46cd0114", { "id": "m1", "visible": false } ],
+                    [ ".", "HTTPCode_Target_4XX_Count", ".", ".", { "id": "m2", "visible": false } ],
+                    [ ".", "HTTPCode_ELB_4XX_Count", ".", ".", { "id": "m3", "visible": false } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "ap-northeast-2",
+                "stat": "Sum",
+                "period": 60,
+                "title": "AP-4XXErrorRate",
+                "annotations": {
+                    "horizontal": [
+                        {
+                            "label": "Error High",
+                            "value": 5
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 6,
+            "x": 12,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "(m2+m3)/m1*100", "label": "ErrorRate", "id": "e1", "region": "ap-northeast-2" } ],
+                    [ "AWS/ApplicationELB", "RequestCount", "LoadBalancer", "app/apnortheast2-alb/62d68cbb46cd0114", { "id": "m1", "visible": false } ],
+                    [ ".", "HTTPCode_Target_5XX_Count", ".", ".", { "id": "m2", "visible": false } ],
+                    [ ".", "HTTPCode_ELB_5XX_Count", ".", ".", { "id": "m3", "visible": false } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "ap-northeast-2",
+                "stat": "Sum",
+                "period": 60,
+                "title": "AP-5XXErrorRate",
+                "annotations": {
+                    "horizontal": [
+                        {
+                            "label": "Error High",
+                            "value": 5
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 6,
+            "x": 18,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ "AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", "app/apnortheast2-alb/62d68cbb46cd0114" ],
+                    [ "...", { "stat": "p99" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "ap-northeast-2",
+                "stat": "Average",
+                "period": 60,
+                "title": "AP-ResponseTime",
+                "annotations": {
+                    "horizontal": [
+                        {
+                            "label": "Duration High",
+                            "value": 0.5
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 0,
+            "x": 12,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "(m2+m3)/m1*100", "label": "ErrorRate", "id": "e1", "region": "us-east-1" } ],
+                    [ "AWS/ApplicationELB", "RequestCount", "LoadBalancer", "app/useast1-alb/4e8509f9a8e03822", { "id": "m1", "visible": false } ],
+                    [ ".", "HTTPCode_Target_5XX_Count", ".", ".", { "id": "m2", "visible": false } ],
+                    [ ".", "HTTPCode_ELB_5XX_Count", ".", ".", { "id": "m3", "visible": false } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Sum",
+                "period": 60,
+                "title": "US-5XXErrorRate",
+                "annotations": {
+                    "horizontal": [
+                        {
+                            "label": "Error High",
+                            "value": 5
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}

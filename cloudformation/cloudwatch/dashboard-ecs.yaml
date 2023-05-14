@@ -1,0 +1,200 @@
+Parameters:
+  DashboardName:
+    Type: String
+    Description: "The name of the dashboard"
+
+  ClusterName:
+    Type: String
+    Description: "The name of the cluster name to monitor"
+
+  ServiceName:
+    Type: String
+    Description: "The name of the service name to monitor"
+
+  ALBName:
+    Type: String
+    Description: "The substring of ALB arn. ex) app/test-alb/33afb7c04632e599"
+
+Resources:
+  Dashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Ref DashboardName
+      DashboardBody: !Sub |
+        {
+          "widgets": [
+            {
+              "height": 6,
+              "width": 6,
+              "x": 0,
+              "y": 0,
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  [ "AWS/ECS", "CPUUtilization", "ServiceName", "${ServiceName}", "ClusterName", "${ClusterName}" ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "${ServiceName}-cpu",
+                "period": 60,
+                "stat": "Average"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 6,
+              "y": 0,
+              "width": 6,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "AWS/ECS", "MemoryUtilization", "ServiceName", "${ServiceName}", "ClusterName", "${ClusterName}" ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "stat": "Average",
+                "period": 60,
+                "title": "${ServiceName}-memory"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12,
+              "y": 0,
+              "width": 6,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "ECS/ContainerInsights", "StorageReadBytes", "ServiceName", "${ServiceName}", "ClusterName", "${ClusterName}" ],
+                  [ ".", "StorageWriteBytes", ".", ".", ".", "." ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "${ServiceName}-disk",
+                "period": 60,
+                "stat": "Average"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 18,
+              "y": 0,
+              "width": 6,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "ECS/ContainerInsights", "NetworkRxBytes", "ServiceName", "${ServiceName}", "ClusterName", "${ClusterName}" ],
+                  [ ".", "NetworkTxBytes", ".", ".", ".", "." ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "${ServiceName}-network",
+                "period": 60,
+                "stat": "Average"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0,
+              "y": 6,
+              "width": 6,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "ECS/ContainerInsights", "DesiredTaskCount", "ServiceName", "${ServiceName}", "ClusterName", "${ClusterName}" ],
+                  [ ".", "RunningTaskCount", ".", ".", ".", "." ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "period": 60,
+                "stat": "Average",
+                "title": "${ServiceName}-task"
+              }
+            },
+            {
+              "height": 6,
+              "width": 6,
+              "x": 6,
+              "y": 6,
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  [ "AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", "${ALBName}" ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "ResponseTime",
+                "period": 60,
+                "stat": "Average"
+              }
+            },
+            {
+              "height": 6,
+              "width": 6,
+              "x": 18,
+              "y": 6,
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  [ "AWS/ApplicationELB", "HTTPCode_Target_5XX_Count", "LoadBalancer", "${ALBName}", { "label": "HTTPCode_Target_5XX_Count" } ],
+                  [ ".", "HTTPCode_ELB_5XX_Count", ".", "${ALBName}" ]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "stat": "Sum",
+                "title": "HTTP 5XXs",
+                "yAxis": {
+                  "left": {
+                    "min": 0
+                  }
+                },
+                "view": "timeSeries",
+                "stacked": false
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12,
+              "y": 6,
+              "width": 6,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "AWS/ApplicationELB", "RequestCount", "LoadBalancer", "${ALBName}" ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "stat": "Sum",
+                "period": 60
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0,
+              "y": 12,
+              "width": 6,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ { "expression": "(m1+m2)/m3*100", "label": "Error rate", "id": "e1", "region": "${AWS::Region}" } ],
+                  [ "AWS/ApplicationELB", "HTTPCode_Target_5XX_Count", "LoadBalancer", "${ALBName}", { "id": "m1", "visible": false } ],
+                  [ ".", "HTTPCode_ELB_5XX_Count", ".", ".", { "id": "m2", "visible": false } ],
+                  [ ".", "RequestCount", ".", ".", { "id": "m3", "visible": false, "stat": "Sum" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "stat": "Average",
+                "period": 60,
+                "title": "Error rate"
+              }
+            }
+          ]
+        }

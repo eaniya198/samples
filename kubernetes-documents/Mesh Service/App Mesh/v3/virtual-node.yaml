@@ -1,0 +1,46 @@
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualNode
+metadata:
+  name: gmst-app-frontend   # 대부분의 REF 또는 호출 할 때 해당 이름 사용
+  namespace: gmst
+spec:
+  awsName: gmst-app-frontend-virtual-node
+  podSelector:
+    matchLabels:
+        app: gmst-frontend
+        version: "v1.0"
+  listeners:
+    - portMapping:
+        port: 5000
+        protocol: http
+      healthCheck:
+        path: "/health"
+        protocol: http
+        healthyThreshold: 2
+        unhealthyThreshold: 3
+        intervalMillis: 10000 # 10s
+        timeoutMillis: 5000 # 5s
+      timeout:
+        http:
+          perRequest:
+            unit: "ms"
+            value: 5000 # 5s
+          # idle:
+          #   unit: "ms"
+          #   value: 10000 # 10s
+  serviceDiscovery:
+    awsCloudMap:
+      namespaceName: "skill53.local"
+      serviceName: "gmst-app-frontend"
+      attributes:
+        - key: version
+          value: "v1.0"
+  logging:
+    accessLog:
+      file:
+        path: "/dev/stdout"
+  # backends:
+  #   - virtualService:
+  #       virtualServiceRef:
+  #         namespace: dev
+  #         name: sample-app-foo

@@ -1,0 +1,109 @@
+Parameters:
+  Project:
+    Type: String
+    Description: "The project name for provisioned this resources"
+    Default: wsi
+
+  Owner:
+    Type: String
+    Description: "The team name for owned this resources"
+    Default: hmoon
+
+Resources:
+  #
+  # IAM - Role
+  #
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: lambda-myFunction-role
+      Description: "The role for lambda function myFunction"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "sts:AssumeRole"
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      # Policies:
+      #   - PolicyName: dynamodb-query
+      #     PolicyDocument:
+      #       Version: "2012-10-17"
+      #       Statement:
+      #         - Effect: Allow
+      #           Action:
+      #             - 'dynamodb:Query'
+      #             - 'dynamodb:Scan'
+      #           Resource: '*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  #
+  # Lambda - Function
+  #
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: myFunction
+      Description: "The lambda function for function url"
+      Runtime: python3.9 # python3.9 , nodejs14.x  ...
+      Architectures: # arm64 , x86_64
+        - arm64
+      PackageType: Zip # Image , Zip
+      Code:
+        # S3Bucket: String
+        # S3Key: String
+        # S3ObjectVersion: String
+        ZipFile: >
+          import json
+
+          def handler(event, context):
+              return {
+                  "statusCode": 200,
+                  "body": json.dumps("Hello from Lambda!")
+              }
+      Handler: index.handler
+      MemorySize: 512 # MB
+      Timeout: 60 # seconds
+      Role: !GetAtt Role.Arn
+      EphemeralStorage:
+        Size: 512 # MB
+      # Environment:
+      #   Variables:
+      #     key01: value01
+      # TracingConfig:
+      #   Mode: Active # Active , PassThrough
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  #
+  # Lambda - Function URL
+  #
+  FunctionURL:
+    Type: AWS::Lambda::Url
+    Properties:
+      AuthType: NONE # AWS_IAM | NONE
+      Cors:
+        AllowCredentials: False
+        AllowMethods: # GET | POST | DELETE | *
+          - GET
+        AllowOrigins: # https://www.example.com ...
+          - "*"
+        # AllowHeaders:
+        #   - String
+        # ExposeHeaders:
+        #   - String
+        # MaxAge: Integer # Browser can cache to [MaxAge]
+      # InvokeMode: String # Not currently supported by AWS Cloudformation
+      # Qualifier: String
+      TargetFunctionArn: !GetAtt Function.Arn

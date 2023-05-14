@@ -1,0 +1,14 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: for
+spec:
+  completions: 2
+  template:
+    spec:
+      containers:
+      - name: for
+        image: python:3.8
+        command: ["/bin/bash", "-c", "echo -e \"for i in range(1, 21):\n    print(str(i))\" | python"]
+      restartPolicy: Never
+  backoffLimit: 4

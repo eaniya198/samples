@@ -1,0 +1,5 @@
+AWS Console -> CloudMap -> Create namespace
+
+Namespace name: skill53.local
+Namespace description: This is discovery for sample-appmesh
+Instance discovery: API calls and DNS queries in VPCs

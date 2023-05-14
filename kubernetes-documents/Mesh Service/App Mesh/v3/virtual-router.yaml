@@ -1,0 +1,30 @@
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualRouter
+metadata:
+  name: gmst-app-router
+  namespace: gmst
+spec:
+  awsName: gmst-app-virtual-router
+  listeners:
+    - portMapping:
+        port: 5000
+        protocol: http
+  routes:
+    - name: gmst-app-route
+      httpRoute:
+        match:
+          prefix: "/"
+        action:
+          weightedTargets:
+            - virtualNodeRef:
+                name: "gmst-app-frontend"
+              weight: 100
+        retryPolicy:
+          maxRetries: 2
+          perRetryTimeout:
+              unit: "ms"
+              value: 2000
+          httpRetryEvents:
+              - server-error
+              - client-error
+              - gateway-error

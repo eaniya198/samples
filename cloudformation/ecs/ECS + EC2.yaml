@@ -1,0 +1,109 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: The template used to create an ECS Cluster from the ECS Console.
+Parameters:
+  ECSClusterName:
+    Type: String
+    Description: Specifies the ECS Cluster Name with which the resources would be
+      associated
+    Default: skills-cluster
+  VpcId:
+    Type: String
+    Description: Optional - Specifies the ID of an existing VPC in which to launch
+      your container instances. If you specify a VPC ID, you must specify a list of
+      existing subnets in that VPC. If you do not specify a VPC ID, a new VPC is created
+      with atleast 1 subnet.
+    Default: ''
+    AllowedPattern: "^(?:vpc-[0-9a-f]{8,17}|)$"
+    ConstraintDescription: VPC Id must begin with 'vpc-' and have a valid uuid
+  SubnetIds:
+    Type: CommaDelimitedList
+    Description: Optional - Specifies the Comma separated list of existing VPC Subnet
+      Ids where ECS instances will run
+    Default: ''
+  LatestECSOptimizedAMI:
+    Description: AMI ID
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
+  UserData:
+    Type: String
+    Description: User data required for Launch Template and Spot Fleet
+    Default: "#!/bin/bash \necho ECS_CLUSTER=skills-cluster >> /etc/ecs/ecs.config;"
+  IamRoleInstanceProfile:
+    Type: String
+    Description: Specifies the Name or the Amazon Resource Name (ARN) of the instance
+      profile associated with the IAM role for the instance
+    Default: arn:aws:iam::948216186415:instance-profile/ecsInstanceRole
+Resources:
+  ECSLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    DependsOn: ECSCluster
+    Properties:
+      LaunchTemplateData:
+        ImageId:
+          Ref: LatestECSOptimizedAMI
+        InstanceType: c5.large
+        KeyName: skills-bastion2
+        IamInstanceProfile:
+          Arn:
+            Ref: IamRoleInstanceProfile
+        UserData:
+          Fn::Base64:
+            Ref: UserData
+  ECSAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      MinSize: '3'
+      MaxSize: '20'
+      DesiredCapacity: '3'
+      LaunchTemplate:
+        LaunchTemplateId:
+          Ref: ECSLaunchTemplate
+        Version:
+          Fn::GetAtt:
+          - ECSLaunchTemplate
+          - LatestVersionNumber
+      VPCZoneIdentifier:
+        Ref: SubnetIds
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName:
+        Ref: ECSClusterName
+      ClusterSettings:
+      - Name: containerInsights
+        Value: enabled
+      Configuration:
+        ExecuteCommandConfiguration:
+          Logging: DEFAULT
+      ServiceConnectDefaults:
+        Namespace: skills-cluster
+      Tags: []
+  EC2CapacityProvider:
+    Type: AWS::ECS::CapacityProvider
+    Properties:
+      AutoScalingGroupProvider:
+        AutoScalingGroupArn:
+          Ref: ECSAutoScalingGroup
+        ManagedScaling:
+          Status: ENABLED
+          TargetCapacity: 100
+        ManagedTerminationProtection: DISABLED
+  ClusterCPAssociation:
+    Type: AWS::ECS::ClusterCapacityProviderAssociations
+    Properties:
+      Cluster: skills-cluster
+      CapacityProviders:
+      - FARGATE
+      - FARGATE_SPOT
+      - Ref: EC2CapacityProvider
+      DefaultCapacityProviderStrategy:
+      - Base: 0
+        Weight: 1
+        CapacityProvider:
+          Ref: EC2CapacityProvider
+Outputs:
+  ECSCluster:
+    Description: The created cluster.
+    Value:
+      Ref: ECSCluster

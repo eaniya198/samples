@@ -1,0 +1,73 @@
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+
+  NamespaceName:
+    Type: String
+    Description: "ex) skills.local"
+
+Resources:
+  #
+  # CloudMap - Namespace
+  #
+  Namespace:
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+    Properties:
+      Description: "This is the namespace for appmesh"
+      Name: !Ref NamespaceName
+      Properties:
+        DnsProperties:
+          SOA:
+            TTL: 15.0
+      Vpc: !Ref VpcId
+
+  #
+  # CloudMap - Service
+  #
+  FrontendService:
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Name: frontend
+      Description: "This is the service for appmesh"
+      NamespaceId: !GetAtt Namespace.Id
+      # Type: HTTP
+      DnsConfig:
+        DnsRecords:
+          - TTL: 15.0
+            Type: A
+        RoutingPolicy: WEIGHTED # WEIGHTED | MULTIVALUE
+      # HealthCheckConfig: # private namespace does not support this option. because, it perform by route53 healthcheck.
+      #   FailureThreshold: 3.0
+      #   ResourcePath: '/health'
+      #   Type: HTTP
+      HealthCheckCustomConfig:
+        FailureThreshold: 2
+
+  BackendService:
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Name: backend
+      Description: "This is the service for appmesh"
+      NamespaceId: !GetAtt Namespace.Id
+      # Type: HTTP
+      DnsConfig:
+        DnsRecords:
+          - TTL: 15.0
+            Type: A
+        RoutingPolicy: WEIGHTED # WEIGHTED | MULTIVALUE
+      # HealthCheckConfig: # private namespace does not support this option. because, it perform by route53 healthcheck.
+      #   FailureThreshold: 3.0
+      #   ResourcePath: '/health'
+      #   Type: HTTP
+      HealthCheckCustomConfig:
+        FailureThreshold: 2
+
+Outputs:
+  NamespaceId:
+    Value: !Ref Namespace
+
+  FrontendServiceArn:
+    Value: !GetAtt FrontendService.Arn
+
+  BackendServiceArn:
+    Value: !GetAtt BackendService.Arn

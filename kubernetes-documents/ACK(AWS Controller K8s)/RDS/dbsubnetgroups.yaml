@@ -1,0 +1,12 @@
+apiVersion: rds.services.k8s.aws/v1alpha1
+kind: DBSubnetGroup
+metadata:
+  name: lion-db-subnet-group
+  namespace: lion-rds
+spec:
+  name: lion-db-subnet-gorup
+  description: lion-db-subnet-group
+  subnetIDs:
+    - subnet-0d87d6b96a97a78b9
+    - subnet-05dd827c14acebcaa
+  tags: []

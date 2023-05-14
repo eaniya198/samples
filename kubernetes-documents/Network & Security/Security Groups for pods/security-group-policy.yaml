@@ -1,0 +1,19 @@
+# aws eks describe-cluster --name awsvpccnitest --query cluster.roleArn --output text
+# aws iam attach-role-policy --policy-arn arn:aws:iam::aws:policy/AmazonEKSVPCResourceController --role-name eksctl-awsvpccnitest-cluster-ServiceRole-1ET6XVF2KLRS4
+# kubectl set env daemonset aws-node -n kube-system ENABLE_POD_ENI=true
+# kubectl patch daemonset aws-node -n kube-system -p '{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
+
+# kubectl set env daemonset aws-node -n kube-system POD_SECURITY_GROUP_ENFORCING_MODE=standard
+
+apiVersion: vpcresources.k8s.aws/v1beta1
+kind: SecurityGroupPolicy
+metadata:
+  name: my-security-group-policy
+  namespace: pod-sg
+spec:
+  podSelector:
+    matchLabels:
+      role: my-role
+  securityGroups:
+    groupIds:
+      - sg-04579a6c457bf43a6

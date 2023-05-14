@@ -1,0 +1,24 @@
+# 쉽게 관리자 권한 부여하기
+# eksctl create iamidentitymapping --cluster eks-cluster --arn arn:aws:iam::948216186415:role/wsi-api-bastion-role --group system:masters --username admin
+
+apiVersion: v1
+data:
+  mapRoles: |
+    - groups:
+      - system:bootstrappers
+      - system:nodes
+      rolearn: arn:aws:iam::948216186415:role/eks-node-role
+      username: system:node:{{EC2PrivateDNSName}}
+    - groups:
+      - system:masters
+      rolearn: arn:aws:iam::948216186415:role/wsi-api-bastion-role
+      username: good
+  mapUsers: |
+    []
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2022-10-22T06:01:25Z"
+  name: aws-auth
+  namespace: kube-system
+  resourceVersion: "12084"
+  uid: 19d76ff1-be45-481d-a5a9-8755977ce0e4

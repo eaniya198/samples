@@ -1,0 +1,37 @@
+Parameters:
+  Project:
+    Type: String
+    Description: "The project name for provisioned this resources"
+    Default: wsi
+
+  Owner:
+    Type: String
+    Description: "The team name for owned this resources"
+    Default: hmoon
+
+  NamePrefix:
+    Type: String
+    Description: "The prefix of resource's Name tag"
+    Default: wsi
+
+Resources:
+  #
+  # AWS Signer - SigningProfile
+  #
+  SigningProfile:
+    Type: AWS::Signer::SigningProfile
+    Properties:
+      PlatformId: AWSLambda-SHA384-ECDSA
+      SignatureValidityPeriod:
+        Type: DAYS # DAYS | MONTHS | YEARS
+        Value: 7
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+Outputs:
+  SigningProfileVersionArn:
+    Description: "The Signing profile version arn for lambda csc"
+    Value: !GetAtt SigningProfile.ProfileVersionArn

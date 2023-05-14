@@ -1,0 +1,37 @@
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualGateway
+metadata:
+  name: gmst-ingress-gw
+  namespace: gmst
+spec:
+  # awsName:  simple-app-ingess-gw-virtual-gateway
+  namespaceSelector:
+    matchLabels:
+      mesh: gmst-mesh
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: "gmst-ingress-gw"
+      app.kubernetes.io/version: "v1"
+  listeners:
+    - portMapping:
+        port: 8088
+        protocol: http
+  logging:
+    accessLog:
+      file:
+        path: "/dev/stdout"
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: GatewayRoute
+metadata:
+  name: gmst-route-foo
+  namespace: gmst
+spec:
+  httpRoute:
+    match:
+      prefix: "/status"
+    action:
+      target:
+        virtualService:
+          virtualServiceRef:
+            name: gmst-frontend-virtual-service

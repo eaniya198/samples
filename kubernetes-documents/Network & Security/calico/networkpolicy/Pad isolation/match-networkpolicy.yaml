@@ -1,0 +1,28 @@
+apiVersion: projectcalico.org/v3
+kind: NetworkPolicy
+metadata:
+  name: match
+  namespace: skills
+spec:
+  selector: type == 'match'
+  ingress:
+    - action: Allow
+      source: {}
+  egress:
+    - action: Deny
+      destination:
+        selector: type == 'stress'
+    - action: Allow
+      protocol: TCP
+      destination:
+        ports:
+          - 443
+          - 80
+    - action: Allow
+      protocol: UDP
+      destination:
+        ports:
+          - 53
+    - action: Allow
+      destination:
+        selector: type == 'match'

@@ -1,0 +1,112 @@
+{
+    "widgets": [
+        {
+            "height": 6,
+            "width": 6,
+            "y": 0,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SELECT AVG(node_cpu_utilization) FROM SCHEMA(ContainerInsights, ClusterName,InstanceId,NodeName) WHERE ClusterName = 'skills-cluster' GROUP BY NodeName", "label": "", "id": "q1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "node CPU util"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 6,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SELECT AVG(node_cpu_reserved_capacity) FROM SCHEMA(ContainerInsights, ClusterName,InstanceId,NodeName) WHERE ClusterName = 'skills-cluster' GROUP BY NodeName", "label": "", "id": "q1", "region": "us-east-1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "node CPU Reserved Capacity"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 0,
+            "x": 6,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SELECT AVG(node_memory_utilization) FROM SCHEMA(ContainerInsights, ClusterName,InstanceId,NodeName) WHERE ClusterName = 'skills-cluster' GROUP BY NodeName", "label": "", "id": "q1", "region": "us-east-1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "node Memory util"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 6,
+            "x": 6,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SELECT AVG(node_memory_reserved_capacity) FROM SCHEMA(ContainerInsights, ClusterName,InstanceId,NodeName) WHERE ClusterName = 'skills-cluster' GROUP BY NodeName", "label": "", "id": "q1", "region": "us-east-1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "node Memory Reserved Capacity"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 0,
+            "x": 12,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SELECT AVG(node_network_total_bytes) FROM SCHEMA(ContainerInsights, ClusterName,InstanceId,NodeName) WHERE ClusterName = 'skills-cluster' GROUP BY NodeName", "label": "", "id": "q1", "region": "us-east-1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "node Network total bytes"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 0,
+            "x": 18,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SELECT AVG(node_number_of_running_pods) FROM SCHEMA(ContainerInsights, ClusterName,InstanceId,NodeName) WHERE ClusterName = 'skills-cluster' GROUP BY NodeName", "label": "", "id": "q1", "region": "us-east-1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "node Pod count"
+            }
+        }
+    ]
+}

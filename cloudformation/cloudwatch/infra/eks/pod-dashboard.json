@@ -1,0 +1,76 @@
+{
+    "widgets": [
+        {
+            "type": "metric",
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SELECT AVG(pod_cpu_utilization) FROM SCHEMA(skills, ClusterName,PodName,ServiceName) WHERE ClusterName = 'skills-cluster' AND ServiceName = 'stress' GROUP BY PodName", "label": "", "id": "q1", "period": 60, "region": "us-east-1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "stress CPU"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 6,
+            "y": 0,
+            "width": 6,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SELECT AVG(pod_memory_utilization) FROM SCHEMA(skills, ClusterName,PodName,ServiceName) WHERE ClusterName = 'skills-cluster' AND ServiceName = 'stress' GROUP BY PodName", "label": "", "id": "q1", "period": 60, "region": "us-east-1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "stress Memory"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 12,
+            "y": 0,
+            "width": 6,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SELECT AVG(pod_network_rx_bytes) FROM SCHEMA(skills, ClusterName,PodName,ServiceName) WHERE ClusterName = 'skills-cluster' AND ServiceName = 'stress' GROUP BY PodName", "label": "", "id": "q1", "period": 60, "region": "us-east-1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "stress Network Rx"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 18,
+            "y": 0,
+            "width": 6,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SELECT AVG(pod_network_tx_bytes) FROM SCHEMA(skills, ClusterName,PodName,ServiceName) WHERE ClusterName = 'skills-cluster' AND ServiceName = 'stress' GROUP BY PodName", "label": "", "id": "q1", "period": 60, "region": "us-east-1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "stress Network Tx"
+            }
+        }
+    ]
+}

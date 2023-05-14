@@ -1,0 +1,74 @@
+Parameters:
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+
+  SecurityGroupIds:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+
+  Owner:
+    Type: String
+    Description: "The team name for owned this resources"
+    Default: hmoon
+
+  Project:
+    Type: String
+    Description: "The project name for provisioned this resources"
+    Default: wsi
+
+  NamePrefix:
+    Type: String
+    Description: "The prefix of resource's Name tag"
+    Default: wsi
+
+Resources:
+  #
+  # MemoryDB - Parameter Group
+  #
+  MemoryDBParameterGroup:
+    Type: AWS::MemoryDB::ParameterGroup
+    Properties:
+      # Description: String
+      ParameterGroupName: !Sub "${NamePrefix}-memorydb-parametergroup"
+      Family: memorydb_redis6
+      # Parameters: Json
+
+  #
+  # MemoryDB - Subnet Group
+  #
+  MemoryDBSubnetGroup:
+    Type: AWS::MemoryDB::SubnetGroup
+    Properties:
+      # Description: String
+      SubnetGroupName: !Sub "${NamePrefix}-memorydb-subnetgroup"
+      SubnetIds: !Ref SubnetIds
+
+  #
+  # MemoryDB - Cluster
+  #
+  MemoryDBCluster:
+    Type: AWS::MemoryDB::Cluster
+    DeletionPolicy: Delete
+    Properties:
+      ACLName: open-access
+      AutoMinorVersionUpgrade: true
+      ClusterName: !Sub "${NamePrefix}-memorydb-cluster"
+      # Description: String
+      EngineVersion: "6.2"
+      # KmsKeyId: String
+      NodeType: db.r6g.large
+      NumReplicasPerShard: 2
+      NumShards: 3
+      ParameterGroupName: !Ref MemoryDBParameterGroup
+      Port: 6379
+      SecurityGroupIds: !Ref SecurityGroupIds
+      SubnetGroupName: !Ref MemoryDBSubnetGroup
+      TLSEnabled: true
+      SnapshotRetentionLimit: 1
+      # SnapshotWindow: String
+      # SnapshotArns:
+      #   - String
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner

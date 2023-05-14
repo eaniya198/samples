@@ -1,0 +1,33 @@
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualNode
+metadata:
+  name: app-server
+  namespace: yelb
+spec:
+  awsName: app-virtual-node
+  podSelector:
+    matchLabels:
+      app: yelb-app
+  listeners:
+    - portMapping:
+        port: 4567
+        protocol: tcp
+      healthCheck:
+        healthyThreshold: 5
+        intervalMillis: 5000
+        path: /health
+        port: 8080
+        protocol: http
+        timeoutMillis: 5000
+        unhealthyThreshold: 2
+
+  serviceDiscovery:
+    dns:
+      hostname: yelb-app.yelb.svc.cluster.local
+      
+#       ######### 본인 또는 다른 virtualService 현재 구성에는 your-apps namespace에 존재하는 your-service-a라는 virtualService로의 아웃바운드 트래픽을 허용한다
+#   backends:
+#     - virtualService:
+#         virtualServiceRef:
+#           name: your-service-a
+#           namespace: your-apps

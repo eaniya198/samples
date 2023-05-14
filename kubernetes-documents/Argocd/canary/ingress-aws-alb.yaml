@@ -1,0 +1,29 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-alb # ingress 이름
+  namespace: dev # ingress가 속할 namespace
+  annotations:
+    kubernetes.io/ingress.class: alb
+    # AWS의 ALB를 ingress로 사용합니다.
+    # AWS의 ALB를 ingress로 생성하기 위해서는 사전에 load balacner controller를 시작해야합니다.
+    # https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.2/deploy/installation/
+    # 자세한 annotation은 아래의 페이지에서 참조합니다.
+    # https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.2/guide/ingress/annotations/
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    # alb.ingress.kubernetes.io/target-type: 'ip' # servicerk cluster-ip 타입인 경우 ip로 지정해야합니다.
+    alb.ingress.kubernetes.io/load-balancer-name: ingress-alb # ALB 이름
+    # alb.ingress.kubernetes.io/security-groups: sg-xxxx, nameOfSg1, nameOfSg2
+    alb.ingress.kubernetes.io/healthcheck-path: /
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '10'
+    alb.ingress.kubernetes.io/healthy-threshold-count: '2' # minimum 2
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: '3'
+    # alb.ingress.kubernetes.io/backend-protocol-version: HTTP2
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /*
+            backend:
+              serviceName: foo-api-svc-stable
+              servicePort: use-annotation # must be the value: use-annotation

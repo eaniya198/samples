@@ -1,0 +1,162 @@
+Parameters:
+  ECSClusterName:
+    Description: "The Cluster name of ecs"
+    Type: String
+    Default: "us-cluster"
+
+  ECSServiceName:
+    Description: "The Service name of ecs"
+    Type: String
+
+  ListenerArn:
+    Description: "The Listener ARN of elb"
+    Type: String
+    Default: "arn:aws:elasticloadbalancing:us-east-1:200148130345:listener/app/us-alb/98c05413a34bba37/0bb36235f34cabac"
+
+  CodeDeployApplicationName:
+    Type: String
+    Description: "The name of codedeploy application"
+
+  # TestListenerArn:
+  #   Description: 'The Test Listener ARN of elb'
+  #   Type: String
+
+  TargetGroup1Name:
+    Description: "The name of target group 1"
+    Type: String
+
+  TargetGroup2Name:
+    Description: "The name of target group 2"
+    Type: String
+
+  Project:
+    Type: String
+    Description: "The project name for provisioned this resources"
+    Default: wsi
+
+  Owner:
+    Type: String
+    Description: "The team name for owned this resources"
+    Default: hmoon
+
+Resources:
+  #
+  # CodeDeploy - Application
+  #
+  Application:
+    Type: AWS::CodeDeploy::Application
+    Properties:
+      ApplicationName: !Ref CodeDeployApplicationName
+      ComputePlatform: ECS # ECS | Lambda | Server
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  #
+  # IAM Role
+  #
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${CodeDeployApplicationName}-codedeploy-role"
+      Description: !Sub "The codedeploy role, ${CodeDeployApplicationName}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "sts:AssumeRole"
+            Principal:
+              Service:
+                - codedeploy.amazonaws.com
+      Policies:
+        - PolicyName: kms
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "kms:Decrypt"
+                  - "kms:Encrypt"
+                  - "kms:GenerateDataKey"
+                Resource:
+                  - "arn:aws:kms:us-east-1:200148130345:key/b383fdc7-b193-4f38-81d1-8fc231c3d260"
+      #   -
+      #     PolicyName: ecs
+      #     PolicyDocument:
+      #       Version: "2012-10-17"
+      #       Statement:
+      #         - Effect: Allow
+      #           Action:
+      #             - 'logs:CreateLogStream'
+      #             - 'logs:PutLogEvents'
+      #           Resource: !GetAtt BuildProjectLogGroup.Arn
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSCodeDeployRoleForECS
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  # #
+  # # CodeDeploy - Deployment Config
+  # #
+  # DeploymentConfig:
+  #   Type: AWS::CodeDeploy::DeploymentConfig
+  #   Properties:
+  #     ComputePlatform: ECS # ECS | Lambda | Server
+  #     DeploymentConfigName: "ecs-blue-green"
+  #     TrafficRoutingConfig:
+  #       # TimeBasedCanary:
+  #       #   CanaryInterval: 5 # minute 0 , 5 , 10 ...
+  #       #   CanaryPercentage: 10
+  #       # TimeBasedLinear:
+  #       #   LinearInterval: 5 # minute 0 , 5 , 10 ...
+  #       #   LinearPercentage: 25
+  #       Type: AllAtOnce # AllAtOnce | TimeBasedCanary | TimeBasedLinear
+
+  #
+  # CodeDeploy - Deployment Group
+  #
+  DeploymentGroup:
+    Type: AWS::CodeDeploy::DeploymentGroup
+    Properties:
+      DeploymentGroupName: !Sub "${ECSClusterName}-${ECSServiceName}"
+      ApplicationName: !Ref Application
+      AutoRollbackConfiguration:
+        Enabled: true
+        Events:
+          - DEPLOYMENT_FAILURE
+      BlueGreenDeploymentConfiguration:
+        DeploymentReadyOption:
+          ActionOnTimeout: CONTINUE_DEPLOYMENT # CONTINUE_DEPLOYMENT | STOP_DEPLOYMENT
+          WaitTimeInMinutes: 0
+        TerminateBlueInstancesOnDeploymentSuccess:
+          Action: TERMINATE # KEEP_ALIVE | TERMINATE
+          TerminationWaitTimeInMinutes: 0 # 0 , 5 , 10 , 15 ...
+      DeploymentConfigName: CodeDeployDefault.ECSAllAtOnce
+      DeploymentStyle:
+        DeploymentOption: WITH_TRAFFIC_CONTROL
+        DeploymentType: BLUE_GREEN
+      ECSServices:
+        - ClusterName: !Ref ECSClusterName
+          ServiceName: !Ref ECSServiceName
+      LoadBalancerInfo:
+        TargetGroupPairInfoList:
+          - ProdTrafficRoute:
+              ListenerArns:
+                - !Ref ListenerArn
+            TargetGroups:
+              - Name: !Ref TargetGroup1Name
+              - Name: !Ref TargetGroup2Name
+            # TestTrafficRoute:
+            #   ListenerArns:
+            #     - !Ref TestListenerArn
+      ServiceRoleArn: !GetAtt Role.Arn
+      # Tags:
+      #   - Tag
+      # TriggerConfigurations:
+      #   - TriggerConfig

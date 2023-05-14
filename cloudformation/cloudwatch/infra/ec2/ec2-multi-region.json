@@ -1,0 +1,220 @@
+{
+    "widgets": [
+        {
+            "height": 6,
+            "width": 6,
+            "y": 0,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SELECT AVG(cpu_usage_active) FROM SCHEMA(CWAgent, AutoScalingGroupName,ImageId,InstanceId,InstanceType,application,cpu) WHERE application = 'hotelbooking' GROUP BY AutoScalingGroupName", "label": "", "id": "q1", "period": 60, "region": "ap-northeast-2" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "ap-northeast-2",
+                "stat": "Average",
+                "period": 60,
+                "title": "AP-CPUUtilization"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 0,
+            "x": 6,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SELECT AVG(mem_used_percent) FROM SCHEMA(CWAgent, AutoScalingGroupName,ImageId,InstanceId,InstanceType,application) WHERE application = 'hotelbooking' GROUP BY AutoScalingGroupName", "label": "", "id": "q1", "period": 60, "region": "ap-northeast-2" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "ap-northeast-2",
+                "stat": "Average",
+                "period": 60,
+                "title": "AP-MemoryUtilization"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 0,
+            "x": 12,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SELECT AVG(diskio_reads) FROM SCHEMA(CWAgent, AutoScalingGroupName,ImageId,InstanceId,InstanceType,application,name) WHERE application = 'hotelbooking' GROUP BY AutoScalingGroupName", "label": "", "id": "q1", "period": 60, "region": "ap-northeast-2" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "ap-northeast-2",
+                "stat": "Average",
+                "period": 60,
+                "title": "AP-DiskReads"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 6,
+            "x": 12,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SELECT AVG(diskio_writes) FROM SCHEMA(CWAgent, AutoScalingGroupName,ImageId,InstanceId,InstanceType,application,name) WHERE application = 'hotelbooking' GROUP BY AutoScalingGroupName", "label": "", "id": "q1", "period": 60, "region": "ap-northeast-2" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "ap-northeast-2",
+                "stat": "Average",
+                "period": 60,
+                "title": "AP-DiskWrites"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 0,
+            "x": 18,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SELECT AVG(net_bytes_recv) FROM SCHEMA(CWAgent, AutoScalingGroupName,ImageId,InstanceId,InstanceType,application,interface) WHERE application = 'hotelbooking' GROUP BY AutoScalingGroupName", "label": "", "id": "q1", "period": 60, "region": "ap-northeast-2" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "ap-northeast-2",
+                "stat": "Average",
+                "period": 60,
+                "title": "AP-NetworkRecv"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 6,
+            "x": 18,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SELECT AVG(net_bytes_sent) FROM SCHEMA(CWAgent, AutoScalingGroupName,ImageId,InstanceId,InstanceType,application,interface) WHERE application = 'hotelbooking' GROUP BY AutoScalingGroupName", "label": "", "id": "q1", "period": 60, "region": "ap-northeast-2" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "ap-northeast-2",
+                "stat": "Average",
+                "period": 60,
+                "title": "AP-NetworkSent"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 6,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SELECT AVG(cpu_usage_active) FROM SCHEMA(CWAgent, AutoScalingGroupName,ImageId,InstanceId,InstanceType,application,cpu) WHERE application = 'hotelbooking' GROUP BY AutoScalingGroupName", "label": "", "id": "q1", "period": 60, "region": "us-east-1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "US-CPUUtilization"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 6,
+            "x": 6,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SELECT AVG(mem_used_percent) FROM SCHEMA(CWAgent, AutoScalingGroupName,ImageId,InstanceId,InstanceType,application) WHERE application = 'hotelbooking' GROUP BY AutoScalingGroupName", "label": "", "id": "q1", "period": 60, "region": "us-east-1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "US-MemoryUtilization"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 12,
+            "x": 12,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SELECT AVG(diskio_reads) FROM SCHEMA(CWAgent, AutoScalingGroupName,ImageId,InstanceId,InstanceType,application,name) WHERE application = 'hotelbooking' GROUP BY AutoScalingGroupName", "label": "", "id": "q1", "period": 60, "region": "us-east-1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "US-DiskReads"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 18,
+            "x": 12,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SELECT AVG(diskio_writes) FROM SCHEMA(CWAgent, AutoScalingGroupName,ImageId,InstanceId,InstanceType,application,name) WHERE application = 'hotelbooking' GROUP BY AutoScalingGroupName", "label": "", "id": "q1", "period": 60, "region": "us-east-1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "US-DiskWrites"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 12,
+            "x": 18,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SELECT AVG(net_bytes_recv) FROM SCHEMA(CWAgent, AutoScalingGroupName,ImageId,InstanceId,InstanceType,application,interface) WHERE application = 'hotelbooking' GROUP BY AutoScalingGroupName", "label": "", "id": "q1", "period": 60, "region": "us-east-1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "US-NetworkRecv"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 18,
+            "x": 18,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SELECT AVG(net_bytes_sent) FROM SCHEMA(CWAgent, AutoScalingGroupName,ImageId,InstanceId,InstanceType,application,interface) WHERE application = 'hotelbooking' GROUP BY AutoScalingGroupName", "label": "", "id": "q1", "period": 60, "region": "us-east-1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "US-NetworkSent"
+            }
+        }
+    ]
+}

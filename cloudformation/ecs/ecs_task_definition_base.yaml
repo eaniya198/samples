@@ -1,0 +1,232 @@
+Parameters:
+  TaskName:
+    Type: String
+    Description: "The task name for running your application"
+
+  TaskCompatability:
+    Type: String
+    Description: "Capacity provider. EC2 or Fargate"
+    AllowedValues:
+      - "EC2"
+      - "FARGATE"
+    Default: "EC2"
+
+  ContainerImage:
+    Type: String
+    Description: "Docker image to run on the container"
+    Default: hmoon630/sample-fastapi
+
+  ContainerPort:
+    Type: Number
+    Description: "Port number of the container"
+    Default: 8080
+
+  ContainerCPU:
+    Type: Number
+    Description: "vCPU allocation of the container"
+    Default: 256
+
+  ContainerMemory:
+    Type: Number
+    Description: "Memory allocation of the container"
+    Default: 512
+
+  ContainerHealthCheckEndpoint:
+    Type: String
+    Description: "Helath check endpoint"
+    Default: "/healthcheck"
+
+  ContainerArguments:
+    Type: CommaDelimitedList
+    Description: "(Optional) Docker CMD arguments. Spaces in string are trimmed"
+
+  Project:
+    Type: String
+    Description: "The project name for provisioned this resources"
+    Default: wsi
+
+  Owner:
+    Type: String
+    Description: "The team name for owned this resources"
+    Default: hmoon
+
+Conditions:
+  ArgumentsExist: !Not [!Equals [!Select ["0", !Ref ContainerArguments], ""]]
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "Task Configuration"
+        Parameters:
+          - TaskName
+          - TaskCompatability
+          - ContainerImage
+          - ContainerPort
+          - ContainerHealthCheckEndpoint
+          - ContainerCPU
+          - ContainerMemory
+          - ContainerArguments
+      - Label:
+          default: "Tag configuration"
+        Parameters:
+          - Project
+          - Owner
+
+Resources:
+  #
+  # IAM Role (for TaskExecutionRole)
+  #
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${TaskName}-execution-role"
+      Description: !Sub "The task execution role for ${TaskName}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "sts:AssumeRole"
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+      # Policies:
+      #   - PolicyName: dynamodb-query
+      #     PolicyDocument:
+      #       Version: "2012-10-17"
+      #       Statement:
+      #         - Effect: Allow
+      #           Action:
+      #             - 'dynamodb:Query'
+      #             - 'dynamodb:Scan'
+      #           Resource: '*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - arn:aws:iam::aws:policy/service-role/AWSAppSyncPushToCloudWatchLogs
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  #
+  # IAM Role (for TaskRole)
+  #
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${TaskName}-role"
+      Description: !Sub "The task role for ${TaskName}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "sts:AssumeRole"
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+      # Policies:
+      #   - PolicyName: get-secret
+      #     PolicyDocument:
+      #       Version: "2012-10-17"
+      #       Statement:
+      #         - Effect: Allow
+      #           Action:
+      #             - "secretsmanager:GetSecretValue"
+      #           Resource: "*"
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  #
+  # CloudwatchLogs - Log Group
+  #
+  CloudwatchLogGroup:
+    Type: AWS::Logs::LogGroup
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Delete
+    Properties:
+      LogGroupName: !Sub "/ecs/application/${TaskName}"
+      RetentionInDays: 14
+
+  #
+  # ECS - Task Definition
+  #
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Delete
+    Properties:
+      Family: !Ref TaskName
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      NetworkMode: awsvpc # awsvpc | bridge | host | none
+      RequiresCompatibilities: # EC2 | FARGATE | EXTERNAL
+        - !Ref TaskCompatability
+      Cpu: !Ref ContainerCPU
+      Memory: !Ref ContainerMemory
+      # EphemeralStorage:
+      #   EphemeralStorage
+      # PlacementConstraints:
+      #   - TaskDefinitionPlacementConstraint
+      # ProxyConfiguration: # app mesh
+      #   ProxyConfiguration
+      # RuntimePlatform:
+      #   RuntimePlatform
+      # Volumes:
+      #   - Volume
+      ContainerDefinitions:
+        - Name: !Ref TaskName
+          Image: !Ref ContainerImage
+          Cpu: !Ref ContainerCPU
+          Memory: !Ref ContainerMemory
+          MemoryReservation: !Ref ContainerMemory
+          Essential: true
+          Privileged: false
+          PortMappings:
+            - ContainerPort: !Ref ContainerPort
+              HostPort: !Ref ContainerPort
+              Protocol: tcp # tcp | udp
+          HealthCheck:
+            Command:
+              [
+                "CMD-SHELL",
+                !Sub "wget --no-verbose --tries=1 --spider http://localhost:${ContainerPort}${ContainerHealthCheckEndpoint} || exit 1",
+              ]
+            Interval: 15
+            Retries: 3
+            StartPeriod: 60
+            Timeout: 5
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref CloudwatchLogGroup
+              awslogs-region: !Ref AWS::Region
+          # FirelensConfiguration:
+          #   FirelensConfiguration
+          # EntryPoint:
+          #   - String
+          Command: !If [ArgumentsExist, !Ref ContainerArguments, []]
+
+          # Environment:
+          #   - KeyValuePair
+          # EnvironmentFiles:
+          #   - EnvironmentFile
+          # MountPoints:
+          #   - MountPoint
+          # RepositoryCredentials:
+          #   RepositoryCredentials
+          # Secrets:
+          #   - Secret
+          # StartTimeout: Integer
+          # StopTimeout: Integer
+          # SystemControls:
+          #   - SystemControl
+          # User: String
+          # VolumesFrom:
+          #   - VolumeFrom
+          # WorkingDirectory: String

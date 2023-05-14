@@ -1,0 +1,33 @@
+Parameters:
+  Project:
+    Type: String
+    Description: "The project name for provisioned this resources"
+    Default: wsi
+
+  Owner:
+    Type: String
+    Description: "The team name for owned this resources"
+    Default: hmoon
+
+  RepositoryName:
+    Type: String
+    Description: "The repository name for codecommit"
+
+Resources:
+  #
+  # CodeCommit - Repository
+  #
+  Repository:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      # Code:
+      #   Code
+      RepositoryDescription: "This is repository of codecommit for source code"
+      RepositoryName: !Ref RepositoryName
+      # Triggers:
+      #   - RepositoryTrigger
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner

@@ -1,0 +1,124 @@
+Parameters:
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+
+  SecurityGroupIds:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+
+  Owner:
+    Type: String
+    Description: "The team name for owned this resources"
+    Default: hmoon
+
+  Project:
+    Type: String
+    Description: "The project name for provisioned this resources"
+    Default: wsi
+
+  CacheName:
+    Type: String
+    Description: "The prefix of resource's Name tag"
+    Default: wsi
+
+  CacheNodeType:
+    Type: String
+    Description: "Elasticache node size"
+    Default: cache.m6g.large
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          Default: "Elasticache config"
+        Parameters:
+          - CacheName
+          - CacheNodeType
+          - SecurityGroupIds
+          - SubnetIds
+          - Project
+          - Owner
+
+Resources:
+  #
+  # Cloudwatch Logs - Log Group
+  #
+  ElasticacheLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/elasticache/${CacheName}-redis"
+      RetentionInDays: 7 # days
+
+  #
+  # Elasticache - Parameter Group
+  #
+  ElasticacheParameterGroup:
+    Type: AWS::ElastiCache::ParameterGroup
+    Properties:
+      # memcached1.4 | memcached1.5 | memcached1.6
+      # redis2.6 | redis2.8 | redis3.2 | redis4.0 | redis5.0 | redis6.x
+      CacheParameterGroupFamily: redis6.x
+      Description: "This is redis parameter group"
+      Properties:
+        cluster-enabled: "no"
+
+  #
+  # Elasticache - Subnet Group
+  #
+  ElasticacheSubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      CacheSubnetGroupName: !Sub "${CacheName}-redis-subnetgroup"
+      Description: "This is redis subnet group"
+      SubnetIds: !Ref SubnetIds
+
+  #
+  # Elasticache - Replication Group
+  #
+  ElasticacheReplicationGroup:
+    Type: AWS::ElastiCache::ReplicationGroup
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+    Properties:
+      ReplicationGroupId: !Sub "${CacheName}"
+      ReplicationGroupDescription: This is Elasticache Redis (cluster mode disabled)
+      Engine: redis # memcached | redis
+      EngineVersion: "6.2" # aws elasticache describe-cache-engine-versions
+      CacheNodeType: !Ref CacheNodeType
+      NumNodeGroups: 1 # shard number
+      ReplicasPerNodeGroup: 2
+      Port: 6379
+      CacheParameterGroupName: !Ref ElasticacheParameterGroup
+      CacheSubnetGroupName: !Ref ElasticacheSubnetGroup
+      SecurityGroupIds: !Ref SecurityGroupIds
+      MultiAZEnabled: true
+      AutomaticFailoverEnabled: true
+      AtRestEncryptionEnabled: true
+      TransitEncryptionEnabled: true
+      # KmsKeyId: String
+      # AuthToken: String
+      AutoMinorVersionUpgrade: true
+      # SnapshotWindow: String
+      SnapshotRetentionLimit: 1
+      # DataTieringEnabled: Boolean
+      LogDeliveryConfigurations:
+        - DestinationDetails:
+            CloudWatchLogsDetails:
+              LogGroup: !Ref ElasticacheLogGroup
+          DestinationType: cloudwatch-logs # cloudwatch-logs | kinesis-firehose
+          LogFormat: json # json | text
+          LogType: slow-log # slow-log | engine-log
+        - DestinationDetails:
+            CloudWatchLogsDetails:
+              LogGroup: !Ref ElasticacheLogGroup
+          DestinationType: cloudwatch-logs # cloudwatch-logs | kinesis-firehose
+          LogFormat: json # json | text
+          LogType: engine-log # slow-log | engine-log
+      # SnapshotArns:
+      #   - String
+      # UserGroupIds:
+      #   - String
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner

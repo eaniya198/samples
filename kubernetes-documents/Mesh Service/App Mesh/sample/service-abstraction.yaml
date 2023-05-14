@@ -1,0 +1,162 @@
+# redis
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualNode
+metadata:
+  name: redis-server
+  namespace: yelb
+spec:
+  awsName: redis-server-virtual-node
+  podSelector:
+    matchLabels:
+      app: redis-server
+  listeners:
+    - portMapping:
+        port: 6379
+        protocol: tcp
+  serviceDiscovery:
+    dns:
+      hostname: redis-server.yelb.svc.cluster.local
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualService
+metadata:
+  name: redis-server
+  namespace: yelb
+spec:
+  awsName: redis-server
+  provider:
+    virtualNode:
+      virtualNodeRef:
+        name: redis-server
+
+---
+
+# DB
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualNode
+metadata:
+  name: db-server
+  namespace: yelb
+spec:
+  awsName: db-virtual-node
+  podSelector:
+    matchLabels:
+      app: yelb-db
+  listeners:
+    - portMapping:
+        port: 5432
+        protocol: tcp
+  serviceDiscovery:
+    dns:
+      hostname: yelb-db.yelb.svc.cluster.local
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualService
+metadata:
+  name: db-server
+  namespace: yelb
+spec:
+  awsName: db-server
+  provider:
+    virtualNode:
+      virtualNodeRef:
+        name: db-server
+
+# appserver
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualNode
+metadata:
+  name: app-server
+  namespace: yelb
+spec:
+  awsName: app-virtual-node
+  podSelector:
+    matchLabels:
+      app: yelb-appserver
+  listeners:
+    - portMapping:
+        port: 4567
+        protocol: tcp
+  serviceDiscovery:
+    dns:
+      hostname: yelb-appserver.yelb.svc.cluster.local
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualRouter
+metadata:
+  namespace: yelb
+  name: app-server
+spec:
+  awsName: app-server-virtual-router
+  listeners:
+  - portMapping:
+      port: 4567
+      protocol: http
+  routes:
+  - name: route-to-yelb-appserver
+    httpRoute:
+      match:
+        prefix: /
+      action:
+        weightedTargets:
+        - virtualNodeRef:
+            name: app-server
+          weight: 1
+      retryPolicy:
+        maxRetries: 2
+        perRetryTimeout:
+          unit: ms
+          value: 2000
+        httpRetryEvents:
+          - server-error
+          - client-error
+          - gateway-error
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualService
+metadata:
+  name: app-server
+  namespace: yelb
+spec:
+  awsName: app-server
+  provider:
+    virtualNode:
+      virtualNodeRef:
+        name: app-server
+
+# UI
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualNode
+metadata:
+  name: ui-server
+  namespace: yelb
+spec:
+  awsName: ui-virtual-node
+  podSelector:
+    matchLabels:
+      app: yelb-ui
+  listeners:
+    - portMapping:
+        port: 80
+        protocol: http
+  serviceDiscovery:
+    dns:
+      hostname: yelb-ui.yelb.svc.cluster.local
+  backends:
+    - virtualService:
+       virtualServiceRef:
+          name: ui-server
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualService
+metadata:
+  name: ui-server
+  namespace: yelb
+spec:
+  awsName: ui-server
+  provider:
+    virtualNode:
+      virtualNodeRef:
+        name: ui-server

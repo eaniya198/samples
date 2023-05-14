@@ -1,0 +1,27 @@
+apiVersion: rds.services.k8s.aws|v1alpha1
+kind: DBClusterParameterGroup
+metadata:
+  name: lion-cluster-parameter-group
+  namespace: lion-rds
+spec:
+  description: lion-cluster-parameter-group
+  family: aurora-mysql5.7
+
+  name: lion-cluster-parameter-group
+  parameterOverrides: {}
+  tags:
+    - key: Name
+      value: lion-cluster-parameter-gorup
+
+
+
+
+### family는 아래표 참고 ###
+## |------------------------------------------------------------------------|
+## | DB Engine	         |   DB Cluster Parameter Group Family Name Example |
+## |---------------------|--------------------------------------------------|
+## | Aurora MySQL	       |   aurora5.6, aurora-mysql5.7, aurora-mysql8.0    |
+## | Aurora PostgreSQL	 |   aurora-postgresql9.6                           |
+## | RDS for MySQL	     |   mysql8.0                                       |
+## | RDS for PostgreSQL	 |   postgres12                                     |
+## |------------------------------------------------------------------------|

@@ -1,0 +1,673 @@
+Parameters:
+  Project:
+    Type: String
+    Description: "The project name for provisioned this resources"
+    Default: wsi
+
+  Owner:
+    Type: String
+    Description: "The team name for owned this resources"
+    Default: jm
+
+  NamePrefix:
+    Type: String
+    Description: "The prefix of resource's Name tag"
+    Default: wsi
+
+  DataSubnet:
+    Type: String
+    Description: "Enable Data Subnet"
+    Default: "true"
+    AllowedValues:
+      - "true"
+      - "false"
+
+  EnableDBNAT:
+    Type: String
+    Description: "DB NAT"
+    Default: "true"
+    AllowedValues:
+      - "true"
+      - "false"
+
+  EnableFlowLog:
+    Type: String
+    Description: "Enable VPC flow log"
+    Default: "false"
+    AllowedValues:
+      - "true"
+      - "false"
+
+  AZCount:
+    Type: Number
+    Description: "How many AZs to deploy subnet"
+    Default: 2
+    AllowedValues:
+      - 2
+      - 3
+
+##
+# Select AZs
+##
+  SubnetAaz:
+    Type: Number
+    Description: "How many AZs to deploy subnet"
+    Default: 0
+  
+  SubnetBaz:
+    Type: Number
+    Description: "How many AZs to deploy subnet"
+    Default: 1
+
+  SubnetCaz:
+    Type: Number
+    Description: "How many AZs to deploy subnet"
+    Default: 2
+
+##
+# CIDR
+##
+  VPCCidr:
+    Description: Cidr block of VPC
+    Type: String
+    Default: 10.10.0.0/16
+
+  PublicSubnetACidr:
+    Description: Cidr block of public subnet A
+    Type: String
+    Default: 10.10.1.0/24
+
+  PublicSubnetBCidr:
+    Description: Cidr block of public subnet B
+    Type: String
+    Default: 10.10.2.0/24
+
+  PublicSubnetCCidr:
+    Description: Cidr block of public subnet C
+    Type: String
+    Default: 10.10.3.0/24
+
+  PrivateSubnetACidr:
+    Description: Cidr block of private subnet A
+    Type: String
+    Default: 10.10.11.0/24
+
+  PrivateSubnetBCidr:
+    Description: Cidr block of private subnet B
+    Type: String
+    Default: 10.10.12.0/24
+
+  PrivateSubnetCCidr:
+    Description: Cidr block of private subnet C
+    Type: String
+    Default: 10.10.13.0/24
+
+  DBSubnetACidr:
+    Description: Cidr block of private subnet A
+    Type: String
+    Default: 10.10.21.0/24
+
+  DBSubnetBCidr:
+    Description: Cidr block of private subnet B
+    Type: String
+    Default: 10.10.22.0/24
+
+  DBSubnetCCidr:
+    Description: Cidr block of private subnet C
+    Type: String
+    Default: 10.10.23.0/24
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "VPC configuration"
+        Parameters:
+          - NamePrefix
+          - EnableFlowLog
+          - Project
+          - Owner
+      - Label:
+          default: "Network cidr configuration"
+        Parameters:
+          - VPCCidr
+          - PublicSubnetACidr
+          - PublicSubnetBCidr
+          - PublicSubnetCCidr
+          - PrivateSubnetACidr
+          - PrivateSubnetBCidr
+          - PrivateSubnetCCidr
+      - Label:
+          default: "Multi AZ count"
+        Parameters:
+          - AZCount
+
+Conditions:
+  CreateFlowLog: !Equals [!Ref EnableFlowLog, "true"]
+  CraeteThirdSubnet: !Equals [!Ref AZCount, 3]
+  CreateDBSubnet: !Equals [!Ref DataSubnet, "true"]
+  CreateDBnThird: !And [!Equals [!Ref DataSubnet, "true"], !Equals [!Ref AZCount, 3]]
+  CreateDBNat: !Equals [!Ref EnableDBNAT, "true"]
+  CreateDBnatThird: !And [!Equals [!Ref EnableDBNAT, "true"], !Equals [!Ref AZCount, 3]]
+
+Resources:
+  #
+  # VPC
+  #
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-vpc"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  #
+  # VPC Flow Log
+  #
+  FlowLog:
+    Condition: CreateFlowLog
+    Type: AWS::EC2::FlowLog
+    Properties:
+      DeliverLogsPermissionArn: !GetAtt FlowLogRole.Arn
+      LogGroupName: !Sub "/aws/flow-log/${VPC}"
+      ResourceId: !Ref VPC
+      ResourceType: VPC
+      TrafficType: ALL
+
+  FlowLogRole:
+    Condition: CreateFlowLog
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: vpc-flow-log-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "sts:AssumeRole"
+            Principal:
+              Service:
+                - vpc-flow-logs.amazonaws.com
+      Policies:
+        - PolicyName: cloudwatch-logs-access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                  - "logs:DescribeLogGroups"
+                  - "logs:DescribeLogStreams"
+                Resource: "*"
+  #
+  # Internet Gateway
+  #
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-igw"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  #
+  # Public Subnet
+  #
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnetACidr
+      AvailabilityZone: !Select [!Ref SubnetAaz, !GetAZs ""]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-public-subnet-a"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  PublicSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnetBCidr
+      AvailabilityZone: !Select [!Ref SubnetBaz, !GetAZs ""]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-public-subnet-b"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  PublicSubnetC:
+    Condition: CraeteThirdSubnet
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnetCCidr
+      AvailabilityZone: !Select [!Ref SubnetCaz, !GetAZs ""]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-public-subnet-c"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  #
+  # Private Subnet
+  #
+  PrivateSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnetACidr
+      AvailabilityZone: !Select [!Ref SubnetAaz, !GetAZs ""]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-private-subnet-a"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  PrivateSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnetBCidr
+      AvailabilityZone: !Select [!Ref SubnetBaz, !GetAZs ""]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-private-subnet-b"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  PrivateSubnetC:
+    Condition: CraeteThirdSubnet
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnetCCidr
+      AvailabilityZone: !Select [!Ref SubnetCaz, !GetAZs ""]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-private-subnet-c"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+
+  #
+  # DB Subnet
+  #
+  DBSubnetA:
+    Condition: CreateDBSubnet
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref DBSubnetACidr
+      AvailabilityZone: !Select [!Ref SubnetAaz, !GetAZs ""]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-db-subnet-a"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  DBSubnetB:
+    Condition: CreateDBSubnet
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref DBSubnetBCidr
+      AvailabilityZone: !Select [!Ref SubnetBaz, !GetAZs ""]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-db-subnet-b"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  DBSubnetC:
+    Condition: CreateDBnThird
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref DBSubnetCCidr
+      AvailabilityZone: !Select [!Ref SubnetCaz, !GetAZs ""]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-db-subnet-c"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  #
+  # NAT Gateway - EIP
+  #
+  NatGatewayAEIP:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-nat-a-eip"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  NatGatewayA:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGatewayAEIP.AllocationId
+      SubnetId: !Ref PublicSubnetA
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-nat-a"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  NatGatewayBEIP:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-nat-b-eip"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  NatGatewayB:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGatewayBEIP.AllocationId
+      SubnetId: !Ref PublicSubnetB
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-nat-b"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  NatGatewayCEIP:
+    Condition: CraeteThirdSubnet
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-nat-c-eip"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  NatGatewayC:
+    Condition: CraeteThirdSubnet
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGatewayCEIP.AllocationId
+      SubnetId: !Ref PublicSubnetC
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-nat-c"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  #
+  # Public RouteTable
+  #
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-public-rt"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  DefaultPublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      RouteTableId: !Ref PublicRouteTable
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnetA
+
+  PublicSubnetBRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnetB
+
+  PublicSubnetCRouteTableAssociation:
+    Condition: CraeteThirdSubnet
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnetC
+
+  #
+  # Private RouteTable
+  #
+  PrivateRouteTableA:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-private-rt-a"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  DefaultPrivateRouteA:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      RouteTableId: !Ref PrivateRouteTableA
+      NatGatewayId: !Ref NatGatewayA
+
+  PrivateSubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableA
+      SubnetId: !Ref PrivateSubnetA
+
+  PrivateRouteTableB:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-private-rt-b"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  DefaultPrivateRouteB:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      RouteTableId: !Ref PrivateRouteTableB
+      NatGatewayId: !Ref NatGatewayB
+
+  PrivateSubnetBRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableB
+      SubnetId: !Ref PrivateSubnetB
+
+  PrivateRouteTableC:
+    Condition: CraeteThirdSubnet
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-private-rt-c"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  DefaultPrivateRouteC:
+    Condition: CraeteThirdSubnet
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      RouteTableId: !Ref PrivateRouteTableC
+      NatGatewayId: !Ref NatGatewayC
+
+  PrivateSubnetCRouteTableAssociation:
+    Condition: CraeteThirdSubnet
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableC
+      SubnetId: !Ref PrivateSubnetC
+
+  #####
+  # DB
+  #####
+
+  DBRouteTableA:
+    Condition: CreateDBSubnet
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-db-rt-a"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  DefaultDBRouteA:
+    Condition: CreateDBNat
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      RouteTableId: !Ref DBRouteTableA
+      NatGatewayId: !Ref NatGatewayA
+
+  DBSubnetARouteTableAssociation:
+    Condition: CreateDBSubnet
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref DBRouteTableA
+      SubnetId: !Ref DBSubnetA
+
+  DBRouteTableB:
+    Condition: CreateDBSubnet
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-db-rt-b"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  DefaultDBRouteB:
+    Condition: CreateDBNat
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      RouteTableId: !Ref DBRouteTableB
+      NatGatewayId: !Ref NatGatewayB
+
+  DBSubnetBRouteTableAssociation:
+    Condition: CreateDBSubnet
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref DBRouteTableB
+      SubnetId: !Ref DBSubnetB
+
+  DBRouteTableC:
+    Condition: CreateDBnThird
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-db-rt-c"
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  DefaultDBRouteB:
+    Condition: CreateDBnatThird
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      RouteTableId: !Ref DBRouteTableC
+      NatGatewayId: !Ref NatGatewayC
+
+  DBSubnetCRouteTableAssociation:
+    Condition: CreateDBnThird
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref DBRouteTableC
+      SubnetId: !Ref DBSubnetC

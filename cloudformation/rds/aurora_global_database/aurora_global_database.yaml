@@ -1,0 +1,22 @@
+Description: >
+  This Cloudformation should place in same region with primary cluster
+
+Parameters:
+  SourceDBClusterIdentifier:
+    Description: SourceDBClusterIdentifier
+    Type: String
+
+  GlobalClusterIdentifier:
+    Description: Global cluster identifier
+    Type: String
+    Default: aurora-postgresql-global-database
+
+Resources:
+  #
+  # RDS - Aurora Global Database
+  #
+  GlobalCluster:
+    Type: AWS::RDS::GlobalCluster
+    Properties:
+      GlobalClusterIdentifier: !Ref GlobalClusterIdentifier
+      SourceDBClusterIdentifier: !Ref SourceDBClusterIdentifier

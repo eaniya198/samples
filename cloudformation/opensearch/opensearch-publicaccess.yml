@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  OpenSearchDomainName:
+    Type: String
+    Default: iot-core-workshop-domain
+  SourceIP:
+    Type: String
+  ThingName:
+    Type: String
+Resources:
+  OpenSearchDomain:
+    Type: AWS::OpenSearchService::Domain
+    Properties:
+      DomainName:
+        Ref: OpenSearchDomainName
+      EngineVersion: "OpenSearch_1.2"
+      # https://docs.aws.amazon.com/opensearch-service/latest/developerguide/what-is.html#choosing-version
+      AdvancedSecurityOptions:
+        Enabled: false
+      ClusterConfig:
+        InstanceCount: 1
+        InstanceType: "t3.small.search"
+        # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-opensearchservice-domain-clusterconfig.html#cfn-opensearchservice-domain-clusterconfig-instancetype
+      CognitoOptions:
+        Enabled: false
+      DomainEndpointOptions:
+        CustomEndpointEnabled: false
+        EnforceHTTPS: true
+        TLSSecurityPolicy: Policy-Min-TLS-1-2-2019-07
+      EBSOptions:
+        EBSEnabled: true
+        VolumeSize: 10
+        VolumeType: "gp2"
+      EncryptionAtRestOptions:
+        Enabled: false
+      NodeToNodeEncryptionOptions:
+        Enabled: false
+      AccessPolicies:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              AWS: "*"
+            Action: "es:*"
+            Resource: !Sub "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${OpenSearchDomainName}/*"
+            Condition:
+              IpAddress:
+                aws:SourceIp:
+                  Ref: SourceIP
+  IoTRuleRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - iot.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: iot-rule-opensearch
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: "es:ESHttpPut"
+                Resource:
+                  Fn::Join:
+                    - ""
+                    - - Fn::GetAtt:
+                          - OpenSearchDomain
+                          - Arn
+                      - "/*"

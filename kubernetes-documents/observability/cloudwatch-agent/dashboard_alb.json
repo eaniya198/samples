@@ -1,0 +1,152 @@
+{
+    "widgets": [
+        {
+            "height": 6,
+            "width": 6,
+            "y": 0,
+            "x": 18,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ "AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", "app/skills-alb/10ccff3c813f86b0", "TargetGroup", "targetgroup/k8s-dev-ordersvc-72d74a7fff/0f4d65b37c48f79d" ],
+                    [ "...", "targetgroup/k8s-dev-stresssv-db6ccdbd97/956d668760dc0587" ],
+                    [ "...", "targetgroup/k8s-dev-customer-7f5ce53c16/2afc8b0c6e82c904" ],
+                    [ "...", "targetgroup/k8s-dev-products-8bf2c39b58/bd8d540b7db2d1c1" ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "ap-northeast-2",
+                "title": "ResponseTime",
+                "period": 60,
+                "stat": "Average"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 6,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ "AWS/ApplicationELB", "HTTPCode_Target_5XX_Count", "LoadBalancer", "app/skills-alb/10ccff3c813f86b0", "TargetGroup", "targetgroup/k8s-dev-ordersvc-72d74a7fff/0f4d65b37c48f79d" ],
+                    [ "...", "targetgroup/k8s-dev-stresssv-db6ccdbd97/956d668760dc0587" ],
+                    [ "...", "targetgroup/k8s-dev-customer-7f5ce53c16/2afc8b0c6e82c904" ],
+                    [ "...", "targetgroup/k8s-dev-products-8bf2c39b58/bd8d540b7db2d1c1" ],
+                    [ ".", "HTTPCode_ELB_5XX_Count", "LoadBalancer", "app/skills-alb/10ccff3c813f86b0"]
+                ],
+                "period": 60,
+                "region": "ap-northeast-2",
+                "stat": "Sum",
+                "title": "HTTP 5XXs",
+                "yAxis": {
+                    "left": {
+                        "min": 0
+                    }
+                },
+                "view": "timeSeries",
+                "stacked": false
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 0,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ "AWS/ApplicationELB", "RequestCount", "LoadBalancer", "app/skills-alb/10ccff3c813f86b0", "TargetGroup", "targetgroup/k8s-dev-ordersvc-72d74a7fff/0f4d65b37c48f79d" ],
+                    [ "...", "targetgroup/k8s-dev-stresssv-db6ccdbd97/956d668760dc0587" ],
+                    [ "...", "targetgroup/k8s-dev-customer-7f5ce53c16/2afc8b0c6e82c904" ],
+                    [ "...", "targetgroup/k8s-dev-products-8bf2c39b58/bd8d540b7db2d1c1" ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "ap-northeast-2",
+                "stat": "Sum",
+                "period": 60
+            }
+        },
+        {
+            "height": 6,
+            "width": 3,
+            "y": 0,
+            "x": 12,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "m1/m3*100", "label": "Order error rate", "id": "e1", "region": "ap-northeast-2" } ],
+                    [ "AWS/ApplicationELB", "HTTPCode_Target_5XX_Count", "TargetGroup", "targetgroup/k8s-dev-ordersvc-72d74a7fff/0f4d65b37c48f79d", "LoadBalancer", "app/skills-alb/10ccff3c813f86b0", { "id": "m1", "visible": false } ],
+                    [ ".", "RequestCount", ".", ".", ".", ".", { "id": "m3", "visible": false, "stat": "Sum" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "ap-northeast-2",
+                "stat": "Average",
+                "period": 60,
+                "title": "Error rate"
+            }
+        },
+        {
+            "height": 6,
+            "width": 3,
+            "y": 0,
+            "x": 15,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "m1/m3*100", "label": "Stress error rate", "id": "e1", "region": "ap-northeast-2" } ],
+                    [ "AWS/ApplicationELB", "HTTPCode_Target_5XX_Count", "TargetGroup", "targetgroup/k8s-dev-stresssv-db6ccdbd97/956d668760dc0587", "LoadBalancer", "app/skills-alb/10ccff3c813f86b0", { "id": "m1", "visible": false } ],
+                    [ ".", "RequestCount", ".", ".", ".", ".", { "id": "m3", "visible": false, "stat": "Sum" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "ap-northeast-2",
+                "stat": "Average",
+                "period": 60,
+                "title": "Error rate"
+            }
+        },
+        {
+            "height": 6,
+            "width": 3,
+            "y": 0,
+            "x": 6,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "m1/m3*100", "label": "Products error rate", "id": "e1", "region": "ap-northeast-2" } ],
+                    [ "AWS/ApplicationELB", "HTTPCode_Target_5XX_Count", "TargetGroup", "targetgroup/k8s-dev-products-8bf2c39b58/bd8d540b7db2d1c1", "LoadBalancer", "app/skills-alb/10ccff3c813f86b0", { "id": "m1", "visible": false } ],
+                    [ ".", "RequestCount", ".", ".", ".", ".", { "id": "m3", "visible": false, "stat": "Sum" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "ap-northeast-2",
+                "stat": "Average",
+                "period": 60,
+                "title": "Error rate"
+            }
+        },
+        {
+            "height": 6,
+            "width": 3,
+            "y": 0,
+            "x": 9,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "m1/m3*100", "label": "Customer error rate", "id": "e1", "region": "ap-northeast-2" } ],
+                    [ "AWS/ApplicationELB", "HTTPCode_Target_5XX_Count", "TargetGroup", "targetgroup/k8s-dev-customer-7f5ce53c16/2afc8b0c6e82c904", "LoadBalancer", "app/skills-alb/10ccff3c813f86b0", { "id": "m1", "visible": false } ],
+                    [ ".", "RequestCount", ".", ".", ".", ".", { "id": "m3", "visible": false, "stat": "Sum" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "ap-northeast-2",
+                "stat": "Average",
+                "period": 60,
+                "title": "Error rate"
+            }
+        }
+    ]
+}

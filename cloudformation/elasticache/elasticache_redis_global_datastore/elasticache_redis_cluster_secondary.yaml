@@ -1,0 +1,56 @@
+Parameters:
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+
+  SecurityGroupIds:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+
+  GlobalReplicationGroupId:
+    Type: String
+
+  Owner:
+    Type: String
+    Description: "The team name for owned this resources"
+    Default: hmoon
+
+  Project:
+    Type: String
+    Description: "The project name for provisioned this resources"
+    Default: wsi
+
+  NamePrefix:
+    Type: String
+    Description: "The prefix of resource's Name tag"
+    Default: wsi
+
+Resources:
+  #
+  # Elasticache - Subnet Group
+  #
+  ElasticacheSubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      CacheSubnetGroupName: !Sub "${NamePrefix}-redis-cluster-subnetgroup"
+      Description: This is redis cluster subnet group
+      SubnetIds: !Ref SubnetIds
+
+  #
+  # Elasticache - Replication Group
+  #
+  ElasticacheReplicationGroup:
+    Type: AWS::ElastiCache::ReplicationGroup
+    DeletionPolicy: Delete
+    Properties:
+      GlobalReplicationGroupId: !Ref GlobalReplicationGroupId
+      ReplicationGroupId: !Sub "${NamePrefix}-redis-cluster"
+      ReplicationGroupDescription: This is Elasticache Redis (cluster mode enabled)
+      ReplicasPerNodeGroup: 2
+      # Port: 6379
+      CacheSubnetGroupName: !Ref ElasticacheSubnetGroup
+      SecurityGroupIds: !Ref SecurityGroupIds
+      MultiAZEnabled: true
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner

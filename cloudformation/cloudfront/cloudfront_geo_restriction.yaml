@@ -1,0 +1,85 @@
+Parameters:
+  BucketName:
+    Description: "The bucket name of s3"
+    Type: String
+
+  Project:
+    Type: String
+    Description: "The project name for provisioned this resources"
+    Default: wsi
+
+  Owner:
+    Type: String
+    Description: "The team name for owned this resources"
+    Default: hmoon
+
+Resources:
+  #
+  # CloudFront - OriginAccessControl
+  #
+  OriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Description: "The OAC for access control to s3 bucket"
+        Name: !Sub "${BucketName}-oac"
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  #
+  # CloudFront - Distribution
+  #
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+          - Id: S3Origin
+            DomainName: !Sub ${BucketName}.s3.amazonaws.com
+            OriginShield:
+              Enabled: true
+              OriginShieldRegion: !Ref AWS::Region
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+            OriginAccessControlId: !GetAtt OriginAccessControl.Id
+        DefaultCacheBehavior:
+          AllowedMethods: # GET, HEAD, OPTIONS, PUT, PATCH, POST, DELETE
+            - GET
+            - HEAD
+            - OPTIONS
+          CachedMethods: # GET, HEAD, OPTIONS
+            - GET
+            - HEAD
+            - OPTIONS
+          # https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          Compress: true
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https # allow-all | https-only | redirect-to-https
+        DefaultRootObject: index.html
+        Enabled: true
+        HttpVersion: http2and3 # http1.1 | http2 | http2and3 | http3
+        IPV6Enabled: false
+        PriceClass: PriceClass_All # PriceClass_100 | PriceClass_200 | PriceClass_All
+        # Logging:
+        #   Logging
+        # OriginGroups:
+        #   Items:
+        #     - OriginGroup
+        #   Quantity: Integer
+        # WebACLId: String
+        Restrictions:
+          GeoRestriction:
+            RestrictionType: blacklist # blacklist | none | whitelist
+            Locations: # ISO 3166 country code (Alpha-2)
+              - KR
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner

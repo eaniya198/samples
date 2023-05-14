@@ -1,0 +1,86 @@
+Parameters:
+  ContainerImageURI:
+    Type: String
+    Description: "The container image uri for lambda function"
+
+  Project:
+    Type: String
+    Description: "The project name for provisioned this resources"
+    Default: wsi
+
+  Owner:
+    Type: String
+    Description: "The team name for owned this resources"
+    Default: hmoon
+
+Resources:
+  #
+  # IAM - Role
+  #
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: lambda-containerFunction-role
+      Description: description
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "sts:AssumeRole"
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      # Policies:
+      #   - PolicyName: dynamodb-query
+      #     PolicyDocument:
+      #       Version: "2012-10-17"
+      #       Statement:
+      #         - Effect: Allow
+      #           Action:
+      #             - 'dynamodb:Query'
+      #             - 'dynamodb:Scan'
+      #           Resource: '*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  #
+  # Lambda - Function
+  #
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: containerFunction
+      Description: "The Lambda Function"
+      Architectures: # arm64 , x86_64
+        - x86_64
+      PackageType: Image # Image , Zip
+      Code:
+        ImageUri: !Ref ContainerImageURI
+      # ImageConfig:
+      #   Command:
+      #     - String
+      #   EntryPoint:
+      #     - String
+      #   WorkingDirectory: String
+      MemorySize: 512 # MB
+      Timeout: 60 # seconds
+      Role: !GetAtt Role.Arn
+      EphemeralStorage:
+        Size: 512 # MB
+      # Environment:
+      #   Variables:
+      #     key01: value01
+      # TracingConfig:
+      #   Mode: Active # Active , PassThrough
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner

@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: yelb-gateway
+  namespace: yelb
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 8088
+      name: http
+  selector:
+    app: yelb-gateway
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yelb-gateway
+  namespace: yelb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: yelb-gateway
+  template:
+    metadata:
+      labels:
+        app: yelb-gateway
+    spec:
+      containers:
+        - name: envoy
+          image: 840364872350.dkr.ecr.ap-southeast-1.amazonaws.com/aws-appmesh-envoy:v1.15.0.0-prod
+          ports:
+            - containerPort: 8088

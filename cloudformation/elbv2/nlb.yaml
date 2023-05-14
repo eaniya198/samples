@@ -1,0 +1,83 @@
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: "The vpc id for application load balancer"
+
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: "The subnet ids for application load balancer"
+
+  Project:
+    Type: String
+    Description: "The project name for provisioned this resources"
+    Default: wsi
+
+  Owner:
+    Type: String
+    Description: "The team name for owned this resources"
+    Default: hmoon
+
+Resources:
+  #
+  # ELBv2 - Target Group
+  #
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckEnabled: true
+      HealthCheckIntervalSeconds: 10 # 10 or 30
+      HealthCheckPath: /
+      HealthCheckPort: 80
+      HealthCheckProtocol: HTTP # HTTP , HTTPS, TCP
+      HealthyThresholdCount: 3 # healthy threshold and unhealthy threshold must be the same
+      UnhealthyThresholdCount: 3
+      IpAddressType: ipv4 # ipv4 , ipv6
+      Name: example-tg
+      Port: 80
+      Protocol: TCP # TCP, UDP, TCP_UDP, TLS
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 30
+      TargetType: instance # instance , ip , alb
+      VpcId: !Ref VpcId
+
+  #
+  # ELBv2 - Network Load Balancer
+  #
+  NetworkLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: example-ext-nlb
+      Type: network # application , network , gateway
+      Scheme: internet-facing # internal , internet-facing
+      IpAddressType: ipv4 # ipv4 , ipv6
+      # LoadBalancerAttributes:
+      #   - key: load_balancing.cross_zone.enabled
+      #     value: true
+      Subnets: !Ref SubnetIds
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  #
+  # ELBv2 - Network Load Balancer Listener
+  #
+  NetworkLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref NetworkLoadBalancer
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+      Port: 80
+      Protocol: TCP # TCP , UDP , TCP_UDP , TLS
+      # Certificates:
+      #   - Certificate
+      # SslPolicy: String

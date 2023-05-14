@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: foo-api
+  namespace: dev
+spec:
+  selector:
+    matchLabels: # https://kubernetes.io/ko/docs/concepts/overview/working-with-objects/common-labels/
+      app.kubernetes.io/name: foo-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: foo-api
+    spec:
+      containers:
+        - image: 242593025403.dkr.ecr.us-east-1.amazonaws.com/foo-api:v1
+          name: foo-api
+          ports:
+            - containerPort: 5000
+          resources:
+            limits:
+              cpu: 820m
+              memory: 3000Mi
+            requests:
+              cpu: 820m
+              memory: 3000Mi
+      terminationGracePeriodSeconds: 60
+  strategy:
+    blueGreen:
+      # Reference to service that the rollout modifies as the active service.
+      activeService: foo-api-svc-active
+      # Name of the service that the rollout modifies as the preview service.
+      # +optional
+      previewService: foo-api-svc-preview
+      # Indicates if the rollout should automatically promote the new ReplicaSet
+      # to the active service or enter a paused state. If not specified, the
+      # default value is true. +optional
+      autoPromotionEnabled: false

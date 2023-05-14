@@ -1,0 +1,5 @@
+
+eksctl utils update-cluster-endpoints --name=wsi-api-cluster --private-access=true --public-access=false
+
+
+Private 으로 변환.

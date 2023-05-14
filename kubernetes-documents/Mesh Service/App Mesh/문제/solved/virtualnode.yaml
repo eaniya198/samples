@@ -1,0 +1,125 @@
+# Reuslt
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualNode
+metadata:
+  name: result-virtual-node
+  namespace: voting
+spec:
+  awsName: result-virtual-node
+  podSelector:
+    matchLabels:
+      name: result-app-pod
+  listeners:
+    - portMapping:
+        port: 80
+        protocol: http
+  serviceDiscovery:
+    dns:
+      hostname: result-service.voting.svc.cluster.local
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualService
+metadata:
+  name: result-virtual-service
+  namespace: voting
+spec:
+  awsName: result-virtual-service
+  provider:
+    virtualNode:
+      virtualNodeRef:
+        name: result-virtual-node
+---
+# Voting
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualNode
+metadata:
+  name: voting-virtual-node
+  namespace: voting
+spec:
+  awsName: voting-virtual-node
+  podSelector:
+    matchLabels:
+      name: voting-app-pod
+  listeners:
+    - portMapping:
+        port: 80
+        protocol: http
+  serviceDiscovery:
+    dns:
+      hostname: voting-service.voting.svc.cluster.local
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualService
+metadata:
+  name: voting-virtual-service
+  namespace: voting
+spec:
+  awsName: voting-virtual-service
+  provider:
+    virtualNode:
+      virtualNodeRef:
+        name: voting-virtual-node
+
+---
+# redis
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualNode
+metadata:
+  name: redis-virtual-node
+  namespace: voting
+spec:
+  awsName: redis-virtual-node
+  podSelector:
+    matchLabels:
+      name: redis-pod
+  listeners:
+    - portMapping:
+        port: 6379
+        protocol: tcp
+  serviceDiscovery:
+    dns:
+      hostname: redis.voting.svc.cluster.local
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualService
+metadata:
+  name: redis-virtual-service
+  namespace: voting
+spec:
+  awsName: redis-virtual-service
+  provider:
+    virtualNode:
+      virtualNodeRef:
+        name: redis-virtual-node
+
+---
+# db
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualNode
+metadata:
+  name: db-virtual-node
+  namespace: voting
+spec:
+  awsName: db-virtual-node
+  podSelector:
+    matchLabels:
+      name: postgres-pod
+  listeners:
+    - portMapping:
+        port: 5432
+        protocol: tcp
+  serviceDiscovery:
+    dns:
+      hostname: db.voting.svc.cluster.local
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualService
+metadata:
+  name: db-virtual-service
+  namespace: voting
+spec:
+  awsName: db-virtual-service
+  provider:
+    virtualNode:
+      virtualNodeRef:
+        name: db-virtual-node

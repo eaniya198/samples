@@ -1,0 +1,70 @@
+{
+  "metrics": {
+    "append_dimensions": {
+      "AutoScalingGroupName": "${aws:AutoScalingGroupName}",
+      "ImageId": "${aws:ImageId}",
+      "InstanceId": "${aws:InstanceId}",
+      "InstanceType": "${aws:InstanceType}"
+    },
+    "aggregation_dimensions" : [["AutoScalingGroupName"]],
+    "metrics_collected": {
+      "cpu": {
+        "resources": [
+          "*"
+        ],
+        "measurement": [
+          "cpu_usage_active"
+        ],
+        "append_dimensions": {
+          "application": "myapp"
+        }
+      },
+      "mem": {
+        "measurement": [
+          "mem_used_percent"
+        ],
+        "append_dimensions": {
+          "application": "myapp"
+        }
+      },
+      "diskio": {
+        "resources": [
+          "*"
+        ],
+        "measurement": [
+          "reads",
+          "writes"
+        ],
+        "append_dimensions": {
+          "application": "myapp"
+        }
+      },
+      "net": {
+        "resources": [
+          "eth0"
+        ],
+        "measurement": [
+          "bytes_sent",
+          "bytes_recv"
+        ],
+        "append_dimensions": {
+          "application": "myapp"
+        }
+      }
+    }
+  },
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          {
+            "file_path": "/opt/app/app.log",
+            "log_group_name": "/aws/ec2/myapp",
+            "log_stream_name": "api_{instance_id}",
+            "timezone": "Local"
+          }
+        ]
+      }
+    }
+  }
+}

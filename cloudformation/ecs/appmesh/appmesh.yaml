@@ -1,0 +1,11 @@
+Resources:
+  #
+  # AppMesh - Mesh
+  #
+  Mesh:
+    Type: AWS::AppMesh::Mesh
+    Properties:
+      MeshName: "example-mesh"
+      Spec:
+        EgressFilter:
+          Type: ALLOW_ALL # ALLOW_ALL | DROP_ALL

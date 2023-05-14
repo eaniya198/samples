@@ -1,0 +1,36 @@
+locals {
+    lb_controller_iam_role_name = "project-eks-aws-lb-ctrl"
+    lb-controller_service_account_name = "aws-load-balancer-controller"
+}
+
+data "aws_eks_cluster_auth" "this" {
+    name = "project-eks-cluster"
+}
+
+provider "helm" {
+    kubernetes {
+        host = "https://975D4B813D685C77D7C1A793314B7430.gr7.ap-northeast-2.eks.amazonaws.com"
+        token = "k8s-aws-v1.aHR0cHM6Ly9zdHMuYXAtbm9ydGhlYXN0LTIuYW1hem9uYXdzLmNvbS8_QWN0aW9uPUdldENhbGxlcklkZW50aXR5JlZlcnNpb249MjAxMS0wNi0xNSZYLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUE1WlJRV1lZWFlYRkZSWE1JJTJGMjAyMzAzMjIlMkZhcC1ub3J0aGVhc3QtMiUyRnN0cyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjMwMzIyVDExNTUyOVomWC1BbXotRXhwaXJlcz02MCZYLUFtei1TaWduZWRIZWFkZXJzPWhvc3QlM0J4LWs4cy1hd3MtaWQmWC1BbXotU2lnbmF0dXJlPTZkYmQxNGVjODM5OTllMDYwNDdkNWYxZjg3YzRkYzgxZWU4YTdlZDdiYzRiMmIxMzhkOGRjMWRkNDY4MGNiMWM"
+        cluster_ca_certificate = "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUMvakNDQWVhZ0F3SUJBZ0lCQURBTkJna3Foa2lHOXcwQkFRc0ZBREFWTVJNd0VRWURWUVFERXdwcmRXSmwKY201bGRHVnpNQjRYRFRJek1ETXlNakV4TURZeE5Wb1hEVE16TURNeE9URXhNRFl4TlZvd0ZURVRNQkVHQTFVRQpBeE1LYTNWaVpYSnVaWFJsY3pDQ0FTSXdEUVlKS29aSWh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBTDFtCjZLc2s5eFhXK2Rxd1Z6MFRCeU1TODB4cmJyemFLM2xibENiUEFRb2RmS2JsZUJnVkhaSk9nZ1Vwd2pBbHV3eDYKaUk3N01vNVV1VDU4WlZTa25MeDhxUVNSUTBBb25BVmVTK0pxK2YydmRqd0NRcCtQT1lZRFphUEFHa25OM0pJZApqbjFDT2ZXYTk0TFVzY090aWxyNlJ1Z0Q2eDdqMU9mcHhFMFZ3Wm5BUGltZHRpb2VtZHV5a3h1L1pZTDRWS0ZUCmJlMm1jd2VXNEN0QnUyMkNjL296azllc2hSdHBRVFViSzRkclRQS0FMTlZOZ01NUTFOZ1hyMnRWY2x3UGQweUMKNE1LUm5PengwUGk4ZlFjSVYrb3RSeFpWWVJ5c2ErMCtIR2ZqK2RwMEhhWG1GWG4ydnE2NHdCT1pNNzBDbElBUApqUjlzckh0WTBhQ2R2eVZsOGJjQ0F3RUFBYU5aTUZjd0RnWURWUjBQQVFIL0JBUURBZ0trTUE4R0ExVWRFd0VCCi93UUZNQU1CQWY4d0hRWURWUjBPQkJZRUZFdlJJOGZrOUNRUzVVMTcrdW5SQUZZb1Q0dkNNQlVHQTFVZEVRUU8KTUF5Q0NtdDFZbVZ5Ym1WMFpYTXdEUVlKS29aSWh2Y05BUUVMQlFBRGdnRUJBTHZVWkp3ZStGY010cGhPT3hYbApqaUlIV1V3MzhzVVoxanI0MnIzaC8xQlhuV1BjbXZxMGphRG05eWZYV3AvRTdYRkE2Z0N4cVgyYlBvREV4MXk5ClB6K3BvTmpUTVZmbWwzdms2a1p0OG42RjVDUW5uVCtPREdOVUxMRGlVOHcvdFZmSE1VL3pwMkthU291RkR1SzEKcVF1Wm5NaytrTDVZZk85Zm1CVUlRVXFOTFhGak45ZEVDZGVQVlhVN2R5Q3lOUjZmcW1LcU05cmZWdVZybGg0TAozUHRBbVB5UU42NUxsSHRlMW1VNEl3T2lxQmNIdWhtYlJ6aEVpOHcxVmRVTS91ZFM5dG13U0I5VmZMbnV4ZUZDCllidWNsSlorRHlkMEFUWnRPSmdBSmJBMUtIbmV5cGkvaFlNelFtNkd2YXVuOFNUWnhXSjBNeXB5R012M0FoMmMKTDRZPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg=="
+    }
+}
+
+module "lb_controller_role" {
+  source = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
+
+  create_role = true
+
+  role_name        = local.lb_controller_iam_role_name
+  role_path        = "/"
+  role_description = "Used by AWS Load Balancer Controller for EKS"
+
+  role_permissions_boundary_arn = ""
+
+  provider_url = replace(module.eks.cluster_oidc_issuer_url, "https://", "")
+  oidc_fully_qualified_subjects = [
+    "system:serviceaccount:kube-system:${local.lb_controller_service_account_name}"
+  ]
+  oidc_fully_qualified_audiences = [
+    "sts.amazonaws.com"
+  ]
+}

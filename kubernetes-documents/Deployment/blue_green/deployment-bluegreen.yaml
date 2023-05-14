@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name : test-deployment
+spec:
+  selector:
+    matchLabels:
+      app: test-pod
+      color: blue
+  replicas: 4
+  template:
+    metadata:
+      labels:
+        app: test-pod
+      color: blue
+    spec:
+      containers:
+        - name: test-pod
+          image: ghcr.io/dispiny/echo_server:1.0 # 단순히 요청을 받으면 version을 >리턴해주는 서버이다
+          ports:
+            - containerPort: 80

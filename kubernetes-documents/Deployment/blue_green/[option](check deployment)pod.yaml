@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: update-checker
+spec:
+  containers:
+    - name: update-checker
+      image: ghcr.io/dispiny/echo_server:curl # curl 이 깔려있는 alpine 리눅스
+      command:
+        - sh
+        - -c
+        - |
+          while true
+          do
+            echo "[`date`]" ; curl -s http://test-service/
+            sleep 1
+          done

@@ -1,0 +1,11 @@
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualService
+metadata:
+  name: gmst-frontend-virtual-service
+  namespace: gmst
+spec:
+  awsName: gmst-frontend.skill53.local
+  provider:
+    virtualRouter:
+      virtualRouterRef:
+        name: gmst-app-router

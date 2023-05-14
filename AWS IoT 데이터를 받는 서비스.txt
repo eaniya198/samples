@@ -1,0 +1,8 @@
+Kinesis Data Stream
+AWS Lambda
+S3
+Kinesis Firehose
+DynamoDB
+OpenSearch
+SNS
+SQS

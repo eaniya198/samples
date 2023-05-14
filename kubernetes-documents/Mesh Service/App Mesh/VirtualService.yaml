@@ -1,0 +1,11 @@
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualService
+metadata:
+  name: app-server
+  namespace: yelb
+spec:
+  awsName: app-server
+  provider:
+    virtualNode:
+      virtualNodeRef:
+        name: app-server

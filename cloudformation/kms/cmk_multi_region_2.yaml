@@ -1,0 +1,44 @@
+Parameters:
+  PrimaryKeyArn:
+    Type: String
+    Description: "The KeyArn from replication source cmk"
+
+  Project:
+    Type: String
+    Description: "The project name for provisioned this resources"
+    Default: wsi
+
+  Owner:
+    Type: String
+    Description: "The team name for owned this resources"
+    Default: hmoon
+
+Resources:
+  ReplicaKey:
+    Type: AWS::KMS::ReplicaKey
+    Properties:
+      Description: "The Replica Key for KMS multi-region"
+      Enabled: true
+      KeyPolicy:
+        Version: 2012-10-17
+        Id: key-default-1
+        Statement:
+          - Sid: Enable Root User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action: "kms:*"
+            Resource: "*"
+      PendingWindowInDays: 7
+      PrimaryKeyArn: !Ref PrimaryKeyArn
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  ReplicaKeyAlias:
+    Type: "AWS::KMS::Alias"
+    Properties:
+      AliasName: "alias/kms/replica-key"
+      TargetKeyId: !Ref ReplicaKey

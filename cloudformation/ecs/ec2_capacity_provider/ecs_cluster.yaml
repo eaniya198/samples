@@ -1,0 +1,66 @@
+Parameters:
+  AutoScalingGroupArn:
+    Type: String
+    Description: "The AutoScalingGroup Arn attached ecs cluster"
+
+  ECSCluster:
+    Type: String
+    Description: "The name of ecs cluster, will created"
+
+  Project:
+    Type: String
+    Description: "The project name for provisioned this resources"
+    Default: wsi
+
+  Owner:
+    Type: String
+    Description: "The team name for owned this resources"
+    Default: hmoon
+
+Resources:
+  #
+  # ECS - Capacity Provider
+  #
+  EC2CapacityProvider:
+    Type: AWS::ECS::CapacityProvider
+    Properties:
+      AutoScalingGroupProvider:
+        AutoScalingGroupArn: !Ref AutoScalingGroupArn
+        ManagedScaling:
+          InstanceWarmupPeriod: 120
+          MaximumScalingStepSize: 20
+          MinimumScalingStepSize: 1
+          Status: ENABLED # DISABLED | ENABLED
+          TargetCapacity: 100 # 1 ~ 100 (%)
+        ManagedTerminationProtection: DISABLED # DISABLED | ENABLED
+      # Name: String
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  #
+  # ECS - Cluster
+  #
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Ref ECSCluster
+      CapacityProviders:
+        - !Ref EC2CapacityProvider
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
+      Configuration:
+        ExecuteCommandConfiguration:
+          Logging: DEFAULT # DEFAULT | NONE | OVERRIDE
+      DefaultCapacityProviderStrategy:
+        - CapacityProvider: !Ref EC2CapacityProvider
+          Weight: 100 # 1 ~ 1000
+          Base: 0
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner

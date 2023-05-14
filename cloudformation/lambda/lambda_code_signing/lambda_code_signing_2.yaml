@@ -1,0 +1,113 @@
+Parameters:
+  Project:
+    Type: String
+    Description: "The project name for provisioned this resources"
+    Default: wsi
+
+  Owner:
+    Type: String
+    Description: "The team name for owned this resources"
+    Default: hmoon
+
+  NamePrefix:
+    Type: String
+    Description: "The prefix of resource's Name tag"
+    Default: wsi
+
+  SigningProfileVersionArns:
+    Type: CommaDelimitedList
+    Description: "The Signing profile version arn for lambda csc"
+
+  SigningCodeS3Bucket:
+    Type: String
+    Description: "The Bucket that is signing code zip file"
+
+  SigningCodeS3Object:
+    Type: String
+    Description: "The Object that is signing code zip file"
+
+  SigningCodeS3ObjectVersion:
+    Type: String
+    Description: "The ObjectVersion that is signing code zip file"
+
+Resources:
+  #
+  # IAM - Role
+  #
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: lambda-myFunction-role
+      Description: "The role for lambda function myFunction"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "sts:AssumeRole"
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      # Policies:
+      #   - PolicyName: dynamodb-query
+      #     PolicyDocument:
+      #       Version: "2012-10-17"
+      #       Statement:
+      #         - Effect: Allow
+      #           Action:
+      #             - 'dynamodb:Query'
+      #             - 'dynamodb:Scan'
+      #           Resource: '*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  #
+  # lambda - CSC (Code Signing Configuration)
+  #
+  CodeSigningConfig:
+    Type: AWS::Lambda::CodeSigningConfig
+    Properties:
+      Description: "The CSC for restrict untrusted profile"
+      AllowedPublishers:
+        SigningProfileVersionArns: !Ref SigningProfileVersionArns
+      CodeSigningPolicies:
+        UntrustedArtifactOnDeployment: Enforce # Enforce | Warn
+
+  #
+  # Lambda - Function
+  #
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: myFunction
+      Description: "The lambda function for code signing"
+      Runtime: python3.9 # python3.9 , nodejs14.x  ...
+      Architectures: # arm64 , x86_64
+        - arm64
+      PackageType: Zip # Image , Zip
+      Code:
+        S3Bucket: !Ref SigningCodeS3Bucket
+        S3Key: !Ref SigningCodeS3Object
+        S3ObjectVersion: !Ref SigningCodeS3ObjectVersion
+      Handler: index.handler
+      MemorySize: 512 # MB
+      Timeout: 60 # seconds
+      Role: !GetAtt Role.Arn
+      EphemeralStorage:
+        Size: 512 # MB
+      # Environment:
+      #   Variables:
+      #     key01: value01
+      # TracingConfig:
+      #   Mode: Active # Active , PassThrough
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+      CodeSigningConfigArn: !GetAtt CodeSigningConfig.CodeSigningConfigArn

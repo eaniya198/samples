@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ssd-monitor # DaemonSet 이름
+  namespace: wsscc2021 # DaemonSet이 속할 namespace
+spec:
+  selector: # Pod Selector
+    matchLabels:
+      app.kubernetes.io/name: ssd-monitor
+  template: # Daemonset에서 생성되는 Pod를 정의합니다.
+    metadata:
+      labels:
+        app.kubernetes.io/name: ssd-monitor
+        # 레이블을 지정합니다.
+        # kubernetes 권장 레이블을 참조하면 좋습니다.
+        # https://kubernetes.io/ko/docs/concepts/overview/working-with-objects/common-labels/
+    spec:
+      # nodeSelector:
+      #   disk: ssd
+      # NodeSelector를 통해 pod를 생성할 node를 선택할 수 있습니다.
+      # Taint/Toleration을 사용하여 node를 선택할 수도 있습니다.
+      containers:
+      - name: main
+        image: luksa/ssd-monitors

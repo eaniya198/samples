@@ -1,0 +1,127 @@
+Parameters:
+  OriginDomainName:
+    Type: String
+    Description: "Origin Domain without protocol(http://)"
+
+  LambdaFunctionVersionArn:
+    Type: String
+    Description: "The lambda function arn for lambda@edge, must be specified version"
+
+  Project:
+    Type: String
+    Description: "The project name for provisioned this resources"
+    Default: wsi
+
+  Owner:
+    Type: String
+    Description: "The team name for owned this resources"
+    Default: hmoon
+
+Resources:
+  #
+  # CloudFront - Cache Policy
+  #
+  CachePolicy:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        Name: example-cache-policy
+        # Comment: String
+        DefaultTTL: 86400 # default
+        MaxTTL: 31536000 # default
+        MinTTL: 0 # default
+        ParametersInCacheKeyAndForwardedToOrigin:
+          EnableAcceptEncodingBrotli: true
+          EnableAcceptEncodingGzip: true
+          CookiesConfig:
+            CookieBehavior: none # all | allExcept | none | whitelist
+          #   Cookies:
+          #     - String
+          HeadersConfig:
+            HeaderBehavior: none # none | whitelist
+          #   Headers:
+          #     - String
+          QueryStringsConfig:
+            QueryStringBehavior: none # all | allExcept | none | whitelist
+          #   QueryStrings:
+          #     - String
+
+  #
+  # CloudFront - Origin Request Policy
+  #
+  OriginRequestPolicy:
+    Type: AWS::CloudFront::OriginRequestPolicy
+    Properties:
+      OriginRequestPolicyConfig:
+        Name: example-origin-request-policy
+        # Comment: String
+        CookiesConfig:
+          CookieBehavior: none # all | none | whitelist
+        #   Cookies:
+        #     - String
+        HeadersConfig:
+          HeaderBehavior: none # allViewer | allViewerAndWhitelistCloudFront | none | whitelist
+        #   Headers:
+        #     - String
+        QueryStringsConfig:
+          QueryStringBehavior: all # all | none | whitelist
+        #   QueryStrings:
+        #     - String
+
+  #
+  # CloudFront - Distribution
+  #
+  Distribution:
+    Type: "AWS::CloudFront::Distribution"
+    Properties:
+      DistributionConfig:
+        Origins:
+          - DomainName: !Ref OriginDomainName
+            Id: CustomOrigin
+            OriginShield:
+              Enabled: true
+              OriginShieldRegion: !Ref AWS::Region
+            CustomOriginConfig:
+              HTTPPort: "80"
+              HTTPSPort: "443"
+              OriginProtocolPolicy: http-only # http-only | https-only | match-viewer
+        Enabled: "true"
+        # Comment: Somecomment
+        # DefaultRootObject: index.html
+        # Logging:
+        #   IncludeCookies: 'true'
+        #   Bucket: mylogs.s3.amazonaws.com
+        #   Prefix: myprefix
+        # Aliases:
+        # - mysite.example.com
+        # - "*.yoursite.example.com"
+        DefaultCacheBehavior:
+          TargetOriginId: CustomOrigin
+          SmoothStreaming: "false"
+          CachePolicyId: !GetAtt CachePolicy.Id
+          OriginRequestPolicyId: !GetAtt OriginRequestPolicy.Id
+          ViewerProtocolPolicy: allow-all
+          LambdaFunctionAssociations:
+            - EventType: origin-response # viewer-request, viewer-response, origin-request, origin-response
+              IncludeBody: false
+              LambdaFunctionARN: !Ref LambdaFunctionVersionArn
+        # CustomErrorResponses:
+        # - ErrorCode: '404'
+        #   ResponsePagePath: "/error-pages/404.html"
+        #   ResponseCode: '200'
+        #   ErrorCachingMinTTL: '30'
+        HttpVersion: http2and3 # http1.1 | http2 | http2and3 | http3
+        PriceClass: PriceClass_All
+        # Restrictions:
+        #   GeoRestriction:
+        #     RestrictionType: whitelist
+        #     Locations:
+        #     - AQ
+        #     - CV
+        # ViewerCertificate:
+        #   CloudFrontDefaultCertificate: 'true'
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner

@@ -1,0 +1,120 @@
+Parameters:
+  ClusterName:
+    Type: String
+    Description: Enter the name of your ECS cluster from which you want to collect metrics
+
+  CWAgentImage:
+    Type: String
+    Description: Cloudwatch agent image. Be aware of cpu architecture
+    Default: public.ecr.aws/cloudwatch-agent/cloudwatch-agent:latest
+
+  # SecurityGroupIds:
+  #   Type: List<AWS::EC2::SecurityGroup::Id>
+  #   Description: "The security group ids for attached your task"
+
+  # SubnetIds:
+  #   Type: List<AWS::EC2::Subnet::Id>
+  #   Description: "The subnet ids for locate your task"
+
+Resources:
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: CWAgentTaskRole
+      Description: Allows ECS tasks to call AWS services on your behalf.
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ""
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: CWAgentTaskExecutionRole
+      Description: Allows ECS container agent makes calls to the Amazon ECS API on your behalf.
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ""
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Delete
+    Properties:
+      LogGroupName: !Sub /aws/ecs/${ClusterName}/ecs-cwagent-daemon-service
+      RetentionInDays: 14
+
+  ECSTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: ecs-cwagent-daemon-service
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      NetworkMode: bridge
+      ContainerDefinitions:
+        - Name: cloudwatch-agent
+          Image: !Ref CWAgentImage
+          MountPoints:
+            - ReadOnly: true
+              ContainerPath: "/rootfs/proc"
+              SourceVolume: proc
+            - ReadOnly: true
+              ContainerPath: "/rootfs/dev"
+              SourceVolume: dev
+            - ReadOnly: true
+              ContainerPath: "/sys/fs/cgroup"
+              SourceVolume: al2_cgroup
+            - ReadOnly: true
+              ContainerPath: "/rootfs/sys/fs/cgroup"
+              SourceVolume: al2_cgroup
+          Environment:
+            - Name: USE_DEFAULT_CONFIG
+              Value: "True"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: ecs
+      RequiresCompatibilities:
+        - EC2
+      Volumes:
+        - Name: proc
+          Host:
+            SourcePath: "/proc"
+        - Name: dev
+          Host:
+            SourcePath: "/dev"
+        - Name: al2_cgroup
+          Host:
+            SourcePath: "/sys/fs/cgroup"
+      Cpu: "128"
+      Memory: "64"
+
+  ECSDaemonService:
+    Type: AWS::ECS::Service
+    Properties:
+      TaskDefinition: !Ref ECSTaskDefinition
+      Cluster: !Ref ClusterName
+      LaunchType: EC2
+      SchedulingStrategy: DAEMON
+      ServiceName: cwagent-daemon-service
+      # NetworkConfiguration:
+      #   AwsvpcConfiguration:
+      #     AssignPublicIp: DISABLED # DISABLED | ENABLED
+      #     SecurityGroups: !Ref SecurityGroupIds
+      #     Subnets: !Ref SubnetIds

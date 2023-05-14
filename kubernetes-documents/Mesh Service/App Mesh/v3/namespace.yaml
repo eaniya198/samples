@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gmst
+  labels:
+    mesh: "gmst-mesh"
+    gateway: "gmst-ingress-gw"
+    appmesh.k8s.aws/sidecarInjectorWebhook: "enabled"

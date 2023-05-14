@@ -1,0 +1,219 @@
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+
+  RouteTableIds: # for gateway type
+    Type: CommaDelimitedList
+
+  SubnetIds: # for interface type
+    Type: List<AWS::EC2::Subnet::Id>
+
+  SecurityGroupIds: # for interface type
+    Type: List<AWS::EC2::SecurityGroup::Id>
+
+Resources:
+  #
+  # For general
+  #
+
+  GatewayEndpointS3:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      RouteTableIds: !Ref RouteTableIds
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
+      VpcEndpointType: Gateway
+      VpcId: !Ref VpcId
+
+  LogsInterfaceEndpint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SubnetIds: !Ref SubnetIds
+      SecurityGroupIds: !Ref SecurityGroupIds
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.logs"
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
+  MonitoringInterfaceEndpint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SubnetIds: !Ref SubnetIds
+      SecurityGroupIds: !Ref SecurityGroupIds
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.monitoring"
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
+  STSInterfaceEndpint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SubnetIds: !Ref SubnetIds
+      SecurityGroupIds: !Ref SecurityGroupIds
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.sts"
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
+  #
+  # For ECS
+  #
+
+  ECSInterfaceEndpint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SubnetIds: !Ref SubnetIds
+      SecurityGroupIds: !Ref SecurityGroupIds
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ecs"
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
+  ECSAgentInterfaceEndpint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SubnetIds: !Ref SubnetIds
+      SecurityGroupIds: !Ref SecurityGroupIds
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ecs-agent"
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
+  ECSTelemetryInterfaceEndpint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SubnetIds: !Ref SubnetIds
+      SecurityGroupIds: !Ref SecurityGroupIds
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ecs-telemetry"
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
+  #
+  # For EKS
+  #
+
+  EKSInterfaceEndpint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SubnetIds: !Ref SubnetIds
+      SecurityGroupIds: !Ref SecurityGroupIds
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.eks"
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
+  AutoScalingInterfaceEndpint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SubnetIds: !Ref SubnetIds
+      SecurityGroupIds: !Ref SecurityGroupIds
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.autoscaling"
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
+  ElasticLoadBalancingInterfaceEndpint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SubnetIds: !Ref SubnetIds
+      SecurityGroupIds: !Ref SecurityGroupIds
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.elasticloadbalancing"
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
+  #
+  # For ECR
+  #
+
+  ECRDKRInterfaceEndpint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SubnetIds: !Ref SubnetIds
+      SecurityGroupIds: !Ref SecurityGroupIds
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ecr.dkr"
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
+  ECRAPIInterfaceEndpint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SubnetIds: !Ref SubnetIds
+      SecurityGroupIds: !Ref SecurityGroupIds
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ecr.api"
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
+  #
+  # For SSM
+  #
+
+  SSMInterfaceEndpint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SubnetIds: !Ref SubnetIds
+      SecurityGroupIds: !Ref SecurityGroupIds
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssm"
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
+  SSMMessagesInterfaceEndpint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SubnetIds: !Ref SubnetIds
+      SecurityGroupIds: !Ref SecurityGroupIds
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssmmessages"
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
+  EC2MessagesInterfaceEndpint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SubnetIds: !Ref SubnetIds
+      SecurityGroupIds: !Ref SecurityGroupIds
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ec2messages"
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
+  #
+  # For EC2
+  #
+  
+  EC2InterfaceEndpint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SubnetIds: !Ref SubnetIds
+      SecurityGroupIds: !Ref SecurityGroupIds
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ec2"
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
+  #
+  # Etc
+  #
+
+  SecretsManagerInterfaceEndpint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SubnetIds: !Ref SubnetIds
+      SecurityGroupIds: !Ref SecurityGroupIds
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.secretsmanager"
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
+  KMSInterfaceEndpint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SubnetIds: !Ref SubnetIds
+      SecurityGroupIds: !Ref SecurityGroupIds
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.kms"
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId

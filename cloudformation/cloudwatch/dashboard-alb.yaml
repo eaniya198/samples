@@ -1,0 +1,350 @@
+Parameters:
+  DashboardName:
+    Type: String
+    Description: "The name of the dashboard"
+
+  LoadBalancerId:
+    Type: String
+    Description: "The substring of ALB arn. ex) app/test-alb/33afb7c04632e599"
+
+  TargetGroup1Id:
+    Type: String
+    Description: "The substring of target group arn. ex) targetgroup/test-tg1/33afb7c04632e599"
+
+  TargetGroup2Id:
+    Type: String
+    Description: "The substring of target group arn. ex) targetgroup/test-tg2/33afb7c04632e599"
+
+  TargetGroup3Id:
+    Type: String
+    Description: "The substring of target group arn. ex) targetgroup/test-tg3/33afb7c04632e599"
+
+  TargetGroup4Id:
+    Type: String
+    Description: "The substring of target group arn. ex) targetgroup/test-tg4/33afb7c04632e599"
+
+  TargetGroup1Name:
+    Type: String
+    Description: "Shortname of target group 1"
+
+  TargetGroup2Name:
+    Type: String
+    Description: "Shortname of target group 2"
+
+  TargetGroup3Name:
+    Type: String
+    Description: "Shortname of target group 3"
+
+  TargetGroup4Name:
+    Type: String
+    Description: "Shortname of target group 4"
+
+  CloudFrontDistributionId:
+    Type: String
+    Description: "CloudFront distribution ID. ex) E3U1FZNRM9WYUO"
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "Dashboard Configuration"
+        Parameters:
+          - DashboardName
+          - LoadBalancerId
+          - TargetGroup1Id
+          - TargetGroup2Id
+          - TargetGroup3Id
+          - TargetGroup4Id
+          - TargetGroup1Name
+          - TargetGroup2Name
+          - TargetGroup3Name
+          - TargetGroup4Name
+          - CloudFrontDistributionId
+
+Resources:
+  Dashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Ref DashboardName
+      DashboardBody: !Sub |
+        {
+          "widgets": [
+            {
+              "height": 6,
+              "width": 6,
+              "y": 0,
+              "x": 0,
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  [ "AWS/CloudFront", "Requests", "Region", "Global", "DistributionId", "${CloudFrontDistributionId}", { "region": "us-east-1", "stat": "Sum", "yAxis": "right" } ],
+                  [ ".", "4xxErrorRate", ".", ".", ".", ".", { "region": "us-east-1" } ],
+                  [ ".", "5xxErrorRate", ".", ".", ".", ".", { "region": "us-east-1" } ]
+                ],
+                "view": "timeSeries",
+                "region": "${AWS::Region}",
+                "stat": "Average",
+                "period": 60,
+                "title": "CloudFront",
+                "yAxis": {
+                  "left": {
+                    "max": 100,
+                    "showUnits": true
+                  },
+                  "right": {
+                    "label": "Count",
+                    "showUnits": false
+                  }
+                }
+              }
+            },
+            {
+              "height": 6,
+              "width": 6,
+              "y": 0,
+              "x": 6,
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  [ "AWS/ApplicationELB", "RequestCount", "LoadBalancer", "${LoadBalancerId}", "TargetGroup", "${TargetGroup1Id}", {"label": "${TargetGroup1Name}"} ],
+                  [ "...", "${TargetGroup2Id}", {"label": "${TargetGroup2Name}"} ],
+                  [ "...", "${TargetGroup3Id}", {"label": "${TargetGroup3Name}"} ],
+                  [ "...", "${TargetGroup4Id}", {"label": "${TargetGroup4Name}"} ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "stat": "Sum",
+                "period": 60
+              }
+            },
+            {
+              "height": 6,
+              "width": 6,
+              "y": 0,
+              "x": 12,
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  [ "AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", "${LoadBalancerId}", "TargetGroup", "${TargetGroup1Id}", {"label": "${TargetGroup1Name}"} ],
+                  [ "...", "${TargetGroup2Id}", {"label": "${TargetGroup2Name}"} ],
+                  [ "...", "${TargetGroup3Id}", {"label": "${TargetGroup3Name}"} ],
+                  [ "...", "${TargetGroup4Id}", {"label": "${TargetGroup4Name}"} ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "ResponseTime Average",
+                "period": 60,
+                "stat": "Average",
+                "annotations": {
+                  "horizontal": [
+                    {
+                      "label": "Duration High",
+                      "value": 0.5
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "height": 6,
+              "width": 6,
+              "y": 0,
+              "x": 18,
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  [ "AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", "${LoadBalancerId}", "TargetGroup", "${TargetGroup1Id}", {"label": "${TargetGroup1Name}"} ],
+                  [ "...", "${TargetGroup2Id}", {"label": "${TargetGroup2Name}"} ],
+                  [ "...", "${TargetGroup3Id}", {"label": "${TargetGroup3Name}"} ],
+                  [ "...", "${TargetGroup4Id}", {"label": "${TargetGroup4Name}"} ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "ResponseTime p99",
+                "period": 60,
+                "stat": "p99",
+                "annotations": {
+                  "horizontal": [
+                    {
+                      "label": "Duration High",
+                      "value": 0.5
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "height": 6,
+              "width": 3,
+              "y": 6,
+              "x": 0,
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  [ { "expression": "m1/m3*100", "label": "Error rate", "id": "e1", "region": "${AWS::Region}" } ],
+                  [ "AWS/ApplicationELB", "HTTPCode_Target_5XX_Count", "TargetGroup", "${TargetGroup1Id}", "LoadBalancer", "${LoadBalancerId}", { "id": "m1", "visible": false } ],
+                  [ ".", "RequestCount", ".", ".", ".", ".", { "id": "m3", "visible": false, "stat": "Sum" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "stat": "Average",
+                "period": 60,
+                "title": "${TargetGroup1Name} error rate",
+                "annotations": {
+                  "horizontal": [
+                    {
+                      "label": "Error rate High",
+                      "value": 5
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "height": 6,
+              "width": 3,
+              "y": 6,
+              "x": 3,
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  [ { "expression": "m1/m3*100", "label": "Error rate", "id": "e1", "region": "${AWS::Region}" } ],
+                  [ "AWS/ApplicationELB", "HTTPCode_Target_5XX_Count", "TargetGroup", "${TargetGroup2Id}", "LoadBalancer", "${LoadBalancerId}", { "id": "m1", "visible": false } ],
+                  [ ".", "RequestCount", ".", ".", ".", ".", { "id": "m3", "visible": false, "stat": "Sum" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "stat": "Average",
+                "period": 60,
+                "title": "${TargetGroup2Name} error rate",
+                "annotations": {
+                  "horizontal": [
+                    {
+                      "label": "Error rate High",
+                      "value": 5
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "height": 6,
+              "width": 3,
+              "y": 6,
+              "x": 6,
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  [ { "expression": "m1/m3*100", "label": "Error rate", "id": "e1", "region": "${AWS::Region}" } ],
+                  [ "AWS/ApplicationELB", "HTTPCode_Target_5XX_Count", "TargetGroup", "${TargetGroup3Id}", "LoadBalancer", "${LoadBalancerId}", { "id": "m1", "visible": false } ],
+                  [ ".", "RequestCount", ".", ".", ".", ".", { "id": "m3", "visible": false, "stat": "Sum" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "stat": "Average",
+                "period": 60,
+                "title": "${TargetGroup3Name} error rate",
+                "annotations": {
+                  "horizontal": [
+                    {
+                      "label": "Error rate High",
+                      "value": 5
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "height": 6,
+              "width": 3,
+              "y": 6,
+              "x": 9,
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  [ { "expression": "m1/m3*100", "label": "Error rate", "id": "e1", "region": "${AWS::Region}" } ],
+                  [ "AWS/ApplicationELB", "HTTPCode_Target_5XX_Count", "TargetGroup", "${TargetGroup4Id}", "LoadBalancer", "${LoadBalancerId}", { "id": "m1", "visible": false } ],
+                  [ ".", "RequestCount", ".", ".", ".", ".", { "id": "m3", "visible": false, "stat": "Sum" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "stat": "Average",
+                "period": 60,
+                "title": "${TargetGroup4Name} error rate",
+                "annotations": {
+                  "horizontal": [
+                    {
+                      "label": "Error rate High",
+                      "value": 5
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "height": 6,
+              "width": 6,
+              "y": 6,
+              "x": 12,
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  [ { "expression": "(m2+m3+m4)/m1*100", "label": "Error rate", "id": "e1", "yAxis": "left", "region": "${AWS::Region}" } ],
+                  [ "AWS/ApplicationELB", "RequestCount", "LoadBalancer", "${LoadBalancerId}", { "id": "m1", "visible": false } ],
+                  [ ".", "HTTPCode_ELB_4XX_Count", ".", ".", { "id": "m2", "visible": false } ],
+                  [ ".", "HTTPCode_ELB_5XX_Count", ".", ".", { "id": "m3", "visible": false } ],
+                  [ ".", "HTTPCode_Target_5XX_Count", ".", ".", { "id": "m4", "visible": false } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "stat": "Sum",
+                "period": 60,
+                "title": "ALB Error rate",
+                "annotations": {
+                  "horizontal": [
+                    {
+                      "label": "Error rate High",
+                      "value": 5
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "height": 6,
+              "width": 6,
+              "y": 6,
+              "x": 18,
+              "type": "metric",
+              "properties": {
+                "metrics": [
+                  [ "AWS/ApplicationELB", "HTTPCode_Target_5XX_Count", "LoadBalancer", "${LoadBalancerId}", "TargetGroup", "${TargetGroup1Id}", {"label": "${TargetGroup1Name} 5XX"} ],
+                  [ "...", "${TargetGroup2Id}", {"label": "${TargetGroup2Name} 5XX"} ],
+                  [ "...", "${TargetGroup3Id}", {"label": "${TargetGroup3Name} 5XX"} ],
+                  [ "...", "${TargetGroup4Id}", {"label": "${TargetGroup4Name} 5XX"} ],
+                  [ ".", "HTTPCode_ELB_4XX_Count", ".", ".", {"label": "ELB 4XX"} ],
+                  [ ".", "HTTPCode_ELB_5XX_Count", ".", ".", {"label": "ELB 5XX"} ]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "stat": "Sum",
+                "title": "HTTP Errors (Count)",
+                "yAxis": {
+                  "left": {
+                    "min": 0
+                  }
+                },
+                "view": "timeSeries",
+                "stacked": false
+              }
+            }
+          ]
+        }

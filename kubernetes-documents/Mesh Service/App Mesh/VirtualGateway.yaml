@@ -1,0 +1,46 @@
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualGateway
+metadata:
+  name: yelb-gateway
+  namespace: yelb
+spec:
+  namespaceSelector:
+    matchLabels:
+      gateway: yelb-gateway
+  podSelector:
+    matchLabels:
+      app: yelb-gateway
+  listeners:
+    - portMapping:
+        port: 8088
+        protocol: http
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: GatewayRoute
+metadata:
+  name: yelbui-gatewayroute
+  namespace: yelb
+spec:
+  httpRoute:
+    match:
+      prefix: "/"
+    action:
+      target:
+        virtualService:
+          virtualServiceRef:
+            name: ui-server
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: GatewayRoute
+metadata:
+  name: yelbapp-gatewayroute
+  namespace: yelb
+spec:
+  httpRoute:
+    match:
+      prefix: "/api"
+    action:
+      target:
+        virtualService:
+          virtualServiceRef:
+            name: app-server

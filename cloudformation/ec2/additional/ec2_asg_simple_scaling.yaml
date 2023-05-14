@@ -1,0 +1,262 @@
+Parameters:
+  AutoScalingGroupName:
+    Type: String
+    Description: "The Name of Auto Scaling Group"
+    Default: cfn-example-asg
+
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: "The Subnet Ids for launched instances"
+
+  SecurityGroupIds:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+    Description: "The Security Group Ids for launched instances"
+
+  KeyPair:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: "The Keypair for launched instances"
+
+  AMI:
+    Type: "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>"
+    Description: "The AMI for launched instances"
+    Default: "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+
+  Project:
+    Type: String
+    Description: "The project name for provisioned this resources"
+    Default: wsi
+
+  Owner:
+    Type: String
+    Description: "The team name for owned this resources"
+    Default: hmoon
+
+Resources:
+  #
+  # IAM Role
+  #
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AutoScalingGroupName}-role"
+      Description: !Sub "The role for ${AutoScalingGroupName}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "sts:AssumeRole"
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+      # Policies:
+      #   - PolicyName: dynamodb-query
+      #     PolicyDocument:
+      #       Version: "2012-10-17"
+      #       Statement:
+      #         - Effect: Allow
+      #           Action:
+      #             - 'dynamodb:Query'
+      #             - 'dynamodb:Scan'
+      #           Resource: '*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  #
+  # IAM Instance Profile
+  #
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      # InstanceProfileName: example-ec2-instance-profile
+      Path: /
+      Roles:
+        - !Ref Role
+
+  #
+  # LaunchTemplate
+  #
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Sub "${AutoScalingGroupName}-lt"
+      TagSpecifications:
+        - ResourceType: launch-template
+          Tags:
+            - Key: Name
+              Value: !Sub "${AutoScalingGroupName}-lt"
+      LaunchTemplateData:
+        BlockDeviceMappings:
+          - DeviceName: /dev/xvda
+            Ebs:
+              DeleteOnTermination: true
+              VolumeType: gp3
+              VolumeSize: 10
+              Iops: 3000
+              Throughput: 125
+              Encrypted: true
+              # KmsKeyId: String
+        IamInstanceProfile:
+          Arn: !GetAtt InstanceProfile.Arn
+          # Name: String
+        ImageId: !Ref AMI
+        InstanceInitiatedShutdownBehavior: terminate # stop , terminate
+        InstanceType: t3.small
+        KeyName: !Ref KeyPair
+        Monitoring: # detailed monitoring
+          Enabled: true
+        SecurityGroupIds: !Ref SecurityGroupIds
+        TagSpecifications:
+          - ResourceType: instance # instance, volume
+            Tags:
+              - Key: Name
+                Value: !Sub "${AutoScalingGroupName}-ec2"
+              - Key: Project
+                Value: !Ref Project
+              - Key: Owner
+                Value: !Ref Owner
+          - ResourceType: volume # instance, volume
+            Tags:
+              - Key: Name
+                Value: !Sub "${AutoScalingGroupName}-ec2"
+              - Key: Project
+                Value: !Ref Project
+              - Key: Owner
+                Value: !Ref Owner
+
+  #
+  # Auto Scaling Group
+  #
+  AutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AutoScalingGroupName: !Ref AutoScalingGroupName
+      # CapacityRebalance: Boolean
+      Cooldown: "120"
+      DesiredCapacityType: units # units , vcpu , memory-mib
+      DesiredCapacity: "2"
+      MinSize: "2"
+      MaxSize: "20"
+      HealthCheckGracePeriod: 60
+      HealthCheckType: EC2 # EC2 , ELB
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: !GetAtt LaunchTemplate.LatestVersionNumber # DefaultVersionNumber , LatestVersionNumber
+      Tags:
+        - PropagateAtLaunch: true
+          Key: Name
+          Value: !Sub "${AutoScalingGroupName}-ec2"
+      # TargetGroupARNs:
+      #   - String
+      VPCZoneIdentifier: !Ref SubnetIds
+
+  #
+  # Scaling Policy
+  #
+  ScaleOutPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: PercentChangeInCapacity
+      PolicyType: SimpleScaling # TargetTrackingScaling | StepScaling | SimpleScaling
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      Cooldown: "120"
+      MinAdjustmentMagnitude: 2
+      ScalingAdjustment: 10 # percent
+
+  ScaleInPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: PercentChangeInCapacity
+      PolicyType: SimpleScaling # TargetTrackingScaling | StepScaling | SimpleScaling
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      Cooldown: "120"
+      MinAdjustmentMagnitude: 1
+      ScalingAdjustment: -5 # percent
+
+  #
+  # Cloudwatch Alarm
+  #
+  ScaleOutAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AutoScalingGroup}-ScaleOut-Alarm"
+      AlarmActions:
+        - !Ref ScaleOutPolicy
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      # GreaterThanOrEqualToThreshold | GreaterThanThreshold |
+      # GreaterThanUpperThreshold | LessThanLowerOrGreaterThanUpperThreshold |
+      # LessThanLowerThreshold | LessThanOrEqualToThreshold | LessThanThreshold
+      TreatMissingData: ignore
+      Metrics:
+        - Id: cpu
+          MetricStat:
+            Metric:
+              Namespace: AWS/EC2
+              MetricName: CPUUtilization
+              Dimensions:
+                - Name: AutoScalingGroupName
+                  Value: !Ref AutoScalingGroup
+            Period: 60
+            Stat: Average
+          ReturnData: False
+        - Id: memory
+          MetricStat:
+            Metric:
+              Namespace: CWAgent
+              MetricName: mem_used_percent
+              Dimensions:
+                - Name: AutoScalingGroupName
+                  Value: !Ref AutoScalingGroup
+            Period: 60
+            Stat: Average
+          ReturnData: False
+        - Id: composite
+          Expression: "IF(cpu > 50 OR memory > 50, 1, 0)"
+
+  ScaleInAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AutoScalingGroup}-ScaleIn-Alarm"
+      AlarmActions:
+        - !Ref ScaleInPolicy
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      # GreaterThanOrEqualToThreshold | GreaterThanThreshold |
+      # GreaterThanUpperThreshold | LessThanLowerOrGreaterThanUpperThreshold |
+      # LessThanLowerThreshold | LessThanOrEqualToThreshold | LessThanThreshold
+      TreatMissingData: ignore
+      Metrics:
+        - Id: cpu
+          MetricStat:
+            Metric:
+              Namespace: AWS/EC2
+              MetricName: CPUUtilization
+              Dimensions:
+                - Name: AutoScalingGroupName
+                  Value: !Ref AutoScalingGroup
+            Period: 60
+            Stat: Average
+          ReturnData: False
+        - Id: memory
+          MetricStat:
+            Metric:
+              Namespace: CWAgent
+              MetricName: mem_used_percent
+              Dimensions:
+                - Name: AutoScalingGroupName
+                  Value: !Ref AutoScalingGroup
+            Period: 60
+            Stat: Average
+          ReturnData: False
+        - Id: composite
+          Expression: "IF(cpu < 40 AND memory < 40, 1, 0)"

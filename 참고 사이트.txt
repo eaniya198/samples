@@ -1,0 +1,7 @@
+https://dispiny.notion.site/AWS-Samples-c7fb660479494059850f7dbcc633863c
+https://nicovibert.com/starthere/
+https://www.server-world.info/
+https://awsclibuilder.com/home
+https://www.bicarait.com/aws-hands-on-lab-library-lets-go-build/
+https://jmespath.org/
+https://cloudinit.readthedocs.io/en/latest/topics/format.html

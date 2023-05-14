@@ -1,0 +1,46 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myapp-ingress-alb # ingress 이름
+  namespace: wsi # ingress가 속할 namespace
+  annotations:
+    alb.ingress.kubernetes.io/load-balancer-name: myapp-ingress-alb # ALB 이름
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: 'ip' # servicerk cluster-ip 타입인 경우 ip로 지정해야합니다.
+#     alb.ingress.kubernetes.io/subnets: subnet-id # ALB를 배포하고자 하는 Subnet을 지정합니다. 대상 Subnet에는 별도의 Tagging을 해두어야 대상으로 지정이 가능합니다.
+    # kubernetes.io/role/internal-elb -> Private SN
+    # kubernetes.io/role/elb -> Public SN
+    alb.ingress.kubernetes.io/security-groups: myapp-ingress-alb-sg
+
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '5'
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '3'
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: '3'
+    alb.ingress.kubernetes.io/healthy-threshold-count: '2' # minimum 2
+    alb.ingress.kubernetes.io/target-group-attributes: deregistration_delay.timeout_seconds=30
+
+
+    alb.ingress.kubernetes.io/actions.response-404: >
+      {"type":"fixed-response","fixedResponseConfig":{"contentType":"application/json","statusCode":"404","messageBody":"{\"detail\":\"Not Found\"}"}}
+
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /health
+            pathType: Prefix # Prefix | Exact
+            backend:
+              service:
+                name: response-404
+                port:
+                  name: use-annotation
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix # Prefix | Exact
+            backend:
+              service:
+                name: myapp-svc-clusterip
+                port:
+                  number: 80 # nodeport가 아닌, 서비스 포트번호를 작성합니다.

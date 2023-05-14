@@ -1,0 +1,101 @@
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: "The VPC id for efs network interfaces"
+
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: "The Subnet Ids for efs network interfaces"
+
+  SecurityGroupIds:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+    Description: "The Security Group Ids for efs network interfaces"
+
+  Project:
+    Type: String
+    Description: "The project name for provisioned this resources"
+    Default: wsi
+
+  Owner:
+    Type: String
+    Description: "The team name for owned this resources"
+    Default: hmoon
+
+Resources:
+  #
+  # EFS - FileSystem
+  #
+  FileSystem:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      BackupPolicy:
+        Status: ENABLED
+      Encrypted: true
+      # KmsKeyId: String
+      FileSystemTags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+        - Key: Name
+          Value: wsi-efs
+      LifecyclePolicies:
+        - TransitionToIA: "AFTER_30_DAYS" # AFTER_7_DAYS , AFTER_14_DAYS , AFTER_30_DAYS , AFTER_60_DAYS , AFTER_90_DAYS
+        - TransitionToPrimaryStorageClass: "AFTER_1_ACCESS"
+      PerformanceMode: generalPurpose # generalPurpose , maxIO
+      ThroughputMode: bursting # bursting , provisioned
+      # ProvisionedThroughputInMibps: Double
+
+  #
+  # EFS - Access Point
+  #
+  AccessPoint:
+    Type: AWS::EFS::AccessPoint
+    Properties:
+      AccessPointTags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+        - Key: Name
+          Value: App1
+      # ClientToken: String
+      FileSystemId: !Ref FileSystem
+      PosixUser:
+        Uid: "1000"
+        Gid: "1000"
+        # SecondaryGids:
+        #   - String
+      RootDirectory:
+        CreationInfo:
+          OwnerGid: "1000"
+          OwnerUid: "1000"
+          Permissions: "0755"
+        Path: /app1
+
+  #
+  # EFS - MountTarget
+  #
+  MountTargetA:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref FileSystem
+      # IpAddress: String
+      SecurityGroups: !Ref SecurityGroupIds
+      SubnetId: !Select [0, !Ref SubnetIds]
+
+  MountTargetB:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref FileSystem
+      # IpAddress: String
+      SecurityGroups: !Ref SecurityGroupIds
+      SubnetId: !Select [1, !Ref SubnetIds]
+
+  MountTargetC:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref FileSystem
+      # IpAddress: String
+      SecurityGroups: !Ref SecurityGroupIds
+      SubnetId: !Select [2, !Ref SubnetIds]

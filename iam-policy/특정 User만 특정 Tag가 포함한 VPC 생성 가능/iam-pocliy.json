@@ -1,0 +1,42 @@
+{
+    Version 2012-10-17,
+    Statement [
+        {
+            Sid VisualEditor0,
+            Effect Allow,
+            Action [
+                ec2CreateVpc,
+                ec2CreateTags
+            ],
+            Resource arnawsec2ap-northeast-2948216186415vpc,
+            Condition {
+                StringEquals {
+                    awsRequestTaguser admin
+                }
+            }
+        },
+        {
+            Sid VisualEditor1,
+            Effect Allow,
+            Action [
+                ec2CreateVpc,
+                ec2CreateTags
+            ],
+            Resource arnawsec2ap-northeast-2948216186415vpc,
+            Condition {
+                StringEquals {
+                    awsRequestTaguser ${awsusername}
+                }
+            }
+        },
+        {
+            Sid VisualEditor2,
+            Effect Allow,
+            Action [
+                ec2DescribeTags,
+                stsDecodeAuthorizationMessage
+            ],
+            Resource arnawsec2ap-northeast-2948216186415vpc
+        }
+    ]
+}

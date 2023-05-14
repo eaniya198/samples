@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+	name: pv-01
+spec:
+	nfs:
+		server: 172.16.x.x
+		path: /sda/data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+	name: pvc-01
+spec:
+	accessModes:
+		- ReadWriteOnce
+	resources:
+		requests:
+			storage: 1G
+	storageClassName: ""
+---
+apiVersion: v1
+kind: Pod
+metadata:
+	name: pod-volume-3
+spec:
+	containers:
+	- name: container
+		image: tmkube/init
+		volumeMounts:
+		- name: pvc-pv
+			mountPath: /volume
+	volumes:
+	- name: pvc-pv
+		persistentVolumeClaim:
+			claimName: pvc-01

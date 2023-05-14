@@ -1,0 +1,149 @@
+Parameters:
+  SecurityGroupIds:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+    Description: "The Security Group Ids for eks cluster"
+
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: "The Subnet Ids for eks cluster api endpoint"
+
+  Project:
+    Type: String
+    Description: "The project name for provisioned this resources"
+    Default: wsi
+
+  Owner:
+    Type: String
+    Description: "The team name for owned this resources"
+    Default: hmoon
+
+  ClusterName:
+    Type: String
+    Description: "The name of eks cluster"
+
+  KubernetesVersion:
+    Type: String
+    Description: "Kubernetes version for EKS"
+    Default: "1.24"
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "EKS Configuration"
+        Parameters:
+          - ClusterName
+          - KubernetesVersion
+          - SecurityGroupIds
+          - SubnetIds
+      - Label:
+          default: "Tag Configuration"
+        Parameters:
+          - Project
+          - Owner
+
+Resources:
+  #
+  # IAM Role (For EKS Cluster)
+  #
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ClusterName}-role"
+      Description: "This role for eks cluster"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "sts:AssumeRole"
+            Principal:
+              Service:
+                - eks.amazonaws.com
+      # Policies:
+      #   - PolicyName: dynamodb-query
+      #     PolicyDocument:
+      #       Version: "2012-10-17"
+      #       Statement:
+      #         - Effect: Allow
+      #           Action:
+      #             - 'dynamodb:Query'
+      #             - 'dynamodb:Scan'
+      #           Resource: '*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  #
+  # KMS - Key
+  #
+  Key:
+    Type: AWS::KMS::Key
+    Properties:
+      # Description: String
+      Enabled: true
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: 2012-10-17
+        Id: key-default-1
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action: "kms:*"
+            Resource: "*"
+      # KeySpec: String
+      KeyUsage: ENCRYPT_DECRYPT
+      MultiRegion: false
+      PendingWindowInDays: 7
+      Tags:
+        - Key: Name
+          Value: !Ref ClusterName
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  #
+  # EKS - Cluster
+  #
+  Cluster:
+    Type: AWS::EKS::Cluster
+    Properties:
+      Name: !Ref ClusterName
+      Version: !Ref KubernetesVersion
+      RoleArn: !GetAtt Role.Arn
+      EncryptionConfig:
+        - Provider:
+            KeyArn: !GetAtt Key.Arn
+          Resources:
+            - secrets
+      KubernetesNetworkConfig:
+        IpFamily: ipv4 # ipv4 | ipv6
+        # ServiceIpv4Cidr: String
+        # ServiceIpv6Cidr: String
+      ResourcesVpcConfig:
+        EndpointPrivateAccess: true
+        EndpointPublicAccess: false
+        # PublicAccessCidrs:
+        #   - 0.0.0.0/0
+        SecurityGroupIds: !Ref SecurityGroupIds
+        SubnetIds: !Ref SubnetIds
+      Logging:
+        ClusterLogging:
+          EnabledTypes: # api | audit | authenticator | controllerManager | scheduler
+            - Type: api
+            - Type: audit
+            - Type: authenticator
+            - Type: controllerManager
+            - Type: scheduler
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner

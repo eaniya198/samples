@@ -1,0 +1,11 @@
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: Mesh
+metadata:
+  name: gmst-mesh       # AWS Appmesh의 이름임
+  namespace: gmst
+spec:
+  namespaceSelector:
+    matchLabels:
+      mesh: gmst-mesh
+  egressFilter:
+    type: ALLOW_ALL # ALLOW_ALL | DROP_ALL

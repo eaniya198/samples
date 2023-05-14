@@ -1,0 +1,112 @@
+{
+    "widgets": [
+        {
+            "height": 6,
+            "width": 6,
+            "y": 0,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SEARCH(' {skills,ClusterName,ServiceName,TaskId} ClusterName=\"unicorn-cluster\" MetricName=\"cpu-utilization\" ', 'Average', 60)", "label": "${PROP('Dim.ServiceName')}", "id": "q1", "region": "us-east-1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "cpu-utilization"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 0,
+            "x": 6,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SEARCH(' {skills,ClusterName,ServiceName,TaskId} ClusterName=\"unicorn-cluster\" MetricName=\"memory-utilization\" ', 'Average', 60)", "label": "${PROP('Dim.ServiceName')}", "id": "q1", "region": "us-east-1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "memory-utilization"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 0,
+            "x": 12,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SEARCH(' {skills,ClusterName,ServiceName,TaskId} ClusterName=\"unicorn-cluster\" MetricName=\"storage-read-bytes\" ', 'Average', 60)", "label": "${PROP('Dim.ServiceName')}", "id": "q1", "region": "us-east-1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "disk-read-bytes"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 6,
+            "x": 12,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SEARCH(' {skills,ClusterName,ServiceName,TaskId} ClusterName=\"unicorn-cluster\" MetricName=\"disk-write-bytes\" ', 'Average', 60)", "label": "${PROP('Dim.ServiceName')}", "id": "q1", "region": "us-east-1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "disk-write-bytes"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 0,
+            "x": 18,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SEARCH(' {skills,ClusterName,ServiceName,TaskId} ClusterName=\"unicorn-cluster\" MetricName=\"network-rx-bytes\" ', 'Average', 60)", "label": "${PROP('Dim.ServiceName')}", "id": "q1", "region": "us-east-1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "network-rx-bytes"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 6,
+            "x": 18,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ { "expression": "SEARCH(' {skills,ClusterName,ServiceName,TaskId} ClusterName=\"unicorn-cluster\" MetricName=\"network-tx-bytes\" ', 'Average', 60)", "label": "${PROP('Dim.ServiceName')}", "id": "q1", "region": "us-east-1" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60,
+                "title": "network-tx-bytes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,93 @@
+Parameters:
+  FilterName:
+    Type: String
+    Description: The name of the log metric filter
+    Default: application-pod-metrics
+
+  LogGroupName:
+    Type: String
+    Description: Log group name to apply metric filter
+    Default: /aws/containerinsights/wsi-cluster/performance
+
+  FilterPattern:
+    Type: String
+    Description: Filter pattern
+    Default: "{ ($.Type = \"Pod\") && ($.Namespace = \"wsi\") }"
+
+  MetricNamespace:
+    Type: String
+    Description: Cloudwatch metric namespace
+    Default: wsi
+
+Resources:
+  MetricFilterCPU:
+    Type: AWS::Logs::MetricFilter
+    Properties: 
+      FilterName: !Sub "${FilterName}-cpu-util"
+      FilterPattern: !Ref FilterPattern
+      LogGroupName: !Ref LogGroupName
+      MetricTransformations: 
+        - MetricName: pod_cpu_utilization
+          Dimensions: 
+            - Key: ClusterName
+              Value: $.ClusterName
+            - Key: ServiceName
+              Value: $.Service
+            - Key: PodName
+              Value: $.kubernetes.pod_name
+          MetricNamespace: !Ref MetricNamespace
+          MetricValue: $.pod_cpu_utilization
+
+  MetricFilterMemory:
+    Type: AWS::Logs::MetricFilter
+    Properties: 
+      FilterName: !Sub "${FilterName}-memory-util"
+      FilterPattern: !Ref FilterPattern
+      LogGroupName: !Ref LogGroupName
+      MetricTransformations: 
+        - MetricName: pod_memory_utilization
+          Dimensions: 
+            - Key: ClusterName
+              Value: $.ClusterName
+            - Key: ServiceName
+              Value: $.Service
+            - Key: PodName
+              Value: $.kubernetes.pod_name
+          MetricNamespace: !Ref MetricNamespace
+          MetricValue: $.pod_memory_utilization
+
+  MetricFilterNetworkRx:
+    Type: AWS::Logs::MetricFilter
+    Properties: 
+      FilterName: !Sub "${FilterName}-network-rx"
+      FilterPattern: !Ref FilterPattern
+      LogGroupName: !Ref LogGroupName
+      MetricTransformations: 
+        - MetricName: pod_network_rx_bytes
+          Dimensions: 
+            - Key: ClusterName
+              Value: $.ClusterName
+            - Key: ServiceName
+              Value: $.Service
+            - Key: PodName
+              Value: $.kubernetes.pod_name
+          MetricNamespace: !Ref MetricNamespace
+          MetricValue: $.pod_network_rx_bytes
+
+  MetricFilterNetworkTx:
+    Type: AWS::Logs::MetricFilter
+    Properties: 
+      FilterName: !Sub "${FilterName}-network-tx"
+      FilterPattern: !Ref FilterPattern
+      LogGroupName: !Ref LogGroupName
+      MetricTransformations:          
+        - MetricName: pod_network_tx_bytes
+          Dimensions: 
+            - Key: ClusterName
+              Value: $.ClusterName
+            - Key: ServiceName
+              Value: $.Service
+            - Key: PodName
+              Value: $.kubernetes.pod_name
+          MetricNamespace: !Ref MetricNamespace
+          MetricValue: $.pod_network_tx_bytes

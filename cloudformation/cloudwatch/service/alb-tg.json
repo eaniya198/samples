@@ -1,0 +1,88 @@
+{
+    "widgets": [
+        {
+            "type": "metric",
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ "AWS/ApplicationELB", "RequestCount", "TargetGroup", "targetgroup/k8s-skills-stress-4421a40656/210112b3653157e3", "LoadBalancer", "app/skills-alb/32a2616147596934", { "label": "stress" } ],
+                    [ "...", "targetgroup/k8s-skills-status-73201ed045/40af9ee45f43ed98", ".", ".", { "label": "status" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Sum",
+                "period": 60
+            }
+        },
+        {
+            "type": "metric",
+            "x": 6,
+            "y": 0,
+            "width": 6,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ { "expression": "m1/m3*100", "label": "stress", "id": "e1" } ],
+                    [ { "expression": "m2/m4*100", "label": "status", "id": "e2" } ],
+                    [ "AWS/ApplicationELB", "HTTPCode_Target_4XX_Count", "TargetGroup", "targetgroup/k8s-skills-stress-4421a40656/210112b3653157e3", "LoadBalancer", "app/skills-alb/32a2616147596934", { "id": "m1", "visible": false } ],
+                    [ "...", "targetgroup/k8s-skills-status-73201ed045/40af9ee45f43ed98", ".", ".", { "id": "m2", "visible": false } ],
+                    [ ".", "RequestCount", ".", "targetgroup/k8s-skills-stress-4421a40656/210112b3653157e3", ".", ".", { "id": "m3", "visible": false } ],
+                    [ "...", "targetgroup/k8s-skills-status-73201ed045/40af9ee45f43ed98", ".", ".", { "id": "m4", "visible": false } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Sum",
+                "period": 60,
+                "title": "4XX Target Error rate"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 12,
+            "y": 0,
+            "width": 6,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ { "expression": "m1/m3*100", "label": "stress", "id": "e1", "region": "us-east-1" } ],
+                    [ { "expression": "m2/m4*100", "label": "status", "id": "e2", "region": "us-east-1" } ],
+                    [ "AWS/ApplicationELB", "HTTPCode_Target_5XX_Count", "TargetGroup", "targetgroup/k8s-skills-stress-4421a40656/210112b3653157e3", "LoadBalancer", "app/skills-alb/32a2616147596934", { "id": "m1", "visible": false } ],
+                    [ "...", "targetgroup/k8s-skills-status-73201ed045/40af9ee45f43ed98", ".", ".", { "id": "m2", "visible": false } ],
+                    [ ".", "RequestCount", ".", "targetgroup/k8s-skills-stress-4421a40656/210112b3653157e3", ".", ".", { "id": "m3", "visible": false } ],
+                    [ "...", "targetgroup/k8s-skills-status-73201ed045/40af9ee45f43ed98", ".", ".", { "id": "m4", "visible": false } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Sum",
+                "period": 60,
+                "title": "5XX Target Error rate"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 18,
+            "y": 0,
+            "width": 6,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ "AWS/ApplicationELB", "TargetResponseTime", "TargetGroup", "targetgroup/k8s-skills-stress-4421a40656/210112b3653157e3", "LoadBalancer", "app/skills-alb/32a2616147596934", { "label": "stress avg" } ],
+                    [ "...", "targetgroup/k8s-skills-status-73201ed045/40af9ee45f43ed98", ".", ".", { "label": "status avg" } ],
+                    [ "...", "targetgroup/k8s-skills-stress-4421a40656/210112b3653157e3", ".", ".", { "stat": "p99", "label": "stress p99" } ],
+                    [ "...", "targetgroup/k8s-skills-status-73201ed045/40af9ee45f43ed98", ".", ".", { "stat": "p99", "label": "status p99" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "us-east-1",
+                "stat": "Average",
+                "period": 60
+            }
+        }
+    ]
+}

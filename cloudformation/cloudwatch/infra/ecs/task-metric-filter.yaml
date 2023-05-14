@@ -1,0 +1,165 @@
+Parameters:
+  FilterName:
+    Type: String
+    Description: The name of the log metric filter
+    Default: task-metrics
+
+  LogGroupName:
+    Type: String
+    Description: Log group name to apply metric filter
+    Default: /aws/ecs/containerinsights/wsi-cluster/performance
+
+  FilterPattern:
+    Type: String
+    Description: Filter pattern
+    Default: "{ ($.Type = \"Task\") }"
+
+  MetricNamespace:
+    Type: String
+    Description: Cloudwatch metric namespace
+    Default: wsi
+
+Resources:
+  MetricFilterCPUUtilized:
+    Type: AWS::Logs::MetricFilter
+    Properties: 
+      FilterName: !Sub "${FilterName}-cpu-utilized"
+      FilterPattern: !Ref FilterPattern
+      LogGroupName: !Ref LogGroupName
+      MetricTransformations: 
+        - MetricName: cpu-utilized
+          Dimensions: 
+            - Key: ClusterName
+              Value: $.ClusterName
+            - Key: ServiceName
+              Value: $.ServiceName
+            - Key: TaskId
+              Value: $.TaskId
+          MetricNamespace: !Ref MetricNamespace
+          MetricValue: $.CpuUtilized
+
+  MetricFilterCPUReserved:
+    Type: AWS::Logs::MetricFilter
+    Properties: 
+      FilterName: !Sub "${FilterName}-cpu-reserved"
+      FilterPattern: !Ref FilterPattern
+      LogGroupName: !Ref LogGroupName
+      MetricTransformations: 
+        - MetricName: cpu-reserved
+          Dimensions: 
+            - Key: ClusterName
+              Value: $.ClusterName
+            - Key: ServiceName
+              Value: $.ServiceName
+            - Key: TaskId
+              Value: $.TaskId
+          MetricNamespace: !Ref MetricNamespace
+          MetricValue: $.CpuReserved
+
+  MetricFilterMemoryUtilized:
+    Type: AWS::Logs::MetricFilter
+    Properties: 
+      FilterName: !Sub "${FilterName}-memory-utilized"
+      FilterPattern: !Ref FilterPattern
+      LogGroupName: !Ref LogGroupName
+      MetricTransformations: 
+        - MetricName: memory-utilized
+          Dimensions: 
+            - Key: ClusterName
+              Value: $.ClusterName
+            - Key: ServiceName
+              Value: $.ServiceName
+            - Key: TaskId
+              Value: $.TaskId
+          MetricNamespace: !Ref MetricNamespace
+          MetricValue: $.MemoryUtilized
+
+  MetricFilterMemoryReserved:
+    Type: AWS::Logs::MetricFilter
+    Properties: 
+      FilterName: !Sub "${FilterName}-memory-reserved"
+      FilterPattern: !Ref FilterPattern
+      LogGroupName: !Ref LogGroupName
+      MetricTransformations: 
+        - MetricName: memory-reserved
+          Dimensions: 
+            - Key: ClusterName
+              Value: $.ClusterName
+            - Key: ServiceName
+              Value: $.ServiceName
+            - Key: TaskId
+              Value: $.TaskId
+          MetricNamespace: !Ref MetricNamespace
+          MetricValue: $.MemoryReserved
+
+  MetricFilterNetworkRx:
+    Type: AWS::Logs::MetricFilter
+    Properties: 
+      FilterName: !Sub "${FilterName}-network-rx"
+      FilterPattern: !Ref FilterPattern
+      LogGroupName: !Ref LogGroupName
+      MetricTransformations: 
+        - MetricName: network-rx-bytes
+          Dimensions: 
+            - Key: ClusterName
+              Value: $.ClusterName
+            - Key: ServiceName
+              Value: $.ServiceName
+            - Key: TaskId
+              Value: $.TaskId
+          MetricNamespace: !Ref MetricNamespace
+          MetricValue: $.NetworkRxBytes
+
+  MetricFilterNetworkTx:
+    Type: AWS::Logs::MetricFilter
+    Properties: 
+      FilterName: !Sub "${FilterName}-network-tx"
+      FilterPattern: !Ref FilterPattern
+      LogGroupName: !Ref LogGroupName
+      MetricTransformations:          
+        - MetricName: network-tx-bytes
+          Dimensions: 
+            - Key: ClusterName
+              Value: $.ClusterName
+            - Key: ServiceName
+              Value: $.ServiceName
+            - Key: TaskId
+              Value: $.TaskId
+          MetricNamespace: !Ref MetricNamespace
+          MetricValue: $.NetworkTxBytes
+
+  MetricFilterStorageRead:
+    Type: AWS::Logs::MetricFilter
+    Properties: 
+      FilterName: !Sub "${FilterName}-storage-read"
+      FilterPattern: !Ref FilterPattern
+      LogGroupName: !Ref LogGroupName
+      MetricTransformations: 
+        - MetricName: storage-read-bytes
+          Dimensions: 
+            - Key: ClusterName
+              Value: $.ClusterName
+            - Key: ServiceName
+              Value: $.ServiceName
+            - Key: TaskId
+              Value: $.TaskId
+          MetricNamespace: !Ref MetricNamespace
+          MetricValue: $.StorageReadBytes
+
+  MetricFilterStorageWrite:
+    Type: AWS::Logs::MetricFilter
+    Properties: 
+      FilterName: !Sub "${FilterName}-storage-write"
+      FilterPattern: !Ref FilterPattern
+      LogGroupName: !Ref LogGroupName
+      MetricTransformations:          
+        - MetricName: storage-write-bytes
+          Dimensions: 
+            - Key: ClusterName
+              Value: $.ClusterName
+            - Key: ServiceName
+              Value: $.ServiceName
+            - Key: TaskId
+              Value: $.TaskId
+          MetricNamespace: !Ref MetricNamespace
+          MetricValue: $.StorageWriteBytes

@@ -1,0 +1,188 @@
+Parameters:
+  InstanceName:
+    Type: String
+    Description: "The name of instance created by auto scaling group"
+    Default: wsi-ecs-workernode
+
+  ECSCluster:
+    Type: String
+    Description: "The name of ecs cluster, created not yet"
+
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: "The Subnet Ids for launched instances"
+
+  SecurityGroupIds:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+    Description: "The Security Group Ids for launched instances"
+
+  KeyPair:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: "The Keypair for launched instances"
+
+  AMI:
+    Type: "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>"
+    Description: "The AMI for launched instances"
+    Default: "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
+
+  Project:
+    Type: String
+    Description: "The project name for provisioned this resources"
+    Default: wsi
+
+  Owner:
+    Type: String
+    Description: "The team name for owned this resources"
+    Default: hmoon
+
+Resources:
+  #
+  # IAM Role
+  #
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${InstanceName}-role"
+      Description: !Sub "The role for ${InstanceName}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "sts:AssumeRole"
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+      # Policies:
+      #   - PolicyName: dynamodb-query
+      #     PolicyDocument:
+      #       Version: "2012-10-17"
+      #       Statement:
+      #         - Effect: Allow
+      #           Action:
+      #             - 'dynamodb:Query'
+      #             - 'dynamodb:Scan'
+      #           Resource: '*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+
+  #
+  # IAM Instance Profile
+  #
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    DependsOn: Role
+    Properties:
+      # InstanceProfileName: example-ec2-instance-profile
+      Path: /
+      Roles:
+        - !Ref Role
+
+  #
+  # LaunchTemplate
+  #
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Ref InstanceName
+      LaunchTemplateData:
+        BlockDeviceMappings:
+          - DeviceName: /dev/xvda
+            Ebs:
+              DeleteOnTermination: true
+              VolumeType: gp3
+              VolumeSize: 30
+              Iops: 3000
+              Throughput: 125
+              Encrypted: true
+              # KmsKeyId: String
+        IamInstanceProfile:
+          Arn: !GetAtt InstanceProfile.Arn
+          # Name: String
+        ImageId: !Ref AMI
+        InstanceInitiatedShutdownBehavior: terminate # stop , terminate
+        InstanceType: c5.large
+        KeyName: !Ref KeyPair
+        Monitoring:
+          Enabled: true
+        SecurityGroupIds: !Ref SecurityGroupIds
+        TagSpecifications:
+          - ResourceType: instance # instance, volume
+            Tags:
+              - Key: Name
+                Value: !Ref InstanceName
+              - Key: Project
+                Value: !Ref Project
+              - Key: Owner
+                Value: !Ref Owner
+          - ResourceType: volume # instance, volume
+            Tags:
+              - Key: Name
+                Value: !Ref InstanceName
+              - Key: Project
+                Value: !Ref Project
+              - Key: Owner
+                Value: !Ref Owner
+        UserData:
+          Fn::Base64: !Sub | ### Bootstrapping container instances
+            #!/bin/bash
+            cat <<'EOF' >> /etc/ecs/ecs.config
+            ECS_CLUSTER=${ECSCluster}
+            ECS_LOGLEVEL=info
+            ECS_WARM_POOLS_CHECK=true
+            EOF
+      TagSpecifications:
+        - ResourceType: launch-template
+          Tags:
+            - Key: Name
+              Value: !Ref InstanceName
+            - Key: Project
+              Value: !Ref Project
+            - Key: Owner
+              Value: !Ref Owner
+
+  #
+  # Auto Scaling Group
+  #
+  AutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AutoScalingGroupName: !Ref InstanceName
+      # CapacityRebalance: Boolean
+      Cooldown: "120"
+      DesiredCapacityType: units # units , vcpu , memory-mib
+      DesiredCapacity: "3"
+      MinSize: "3"
+      MaxSize: "20"
+      HealthCheckGracePeriod: 60
+      HealthCheckType: EC2 # EC2 , ELB
+      NewInstancesProtectedFromScaleIn: false
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: !GetAtt LaunchTemplate.LatestVersionNumber # DefaultVersionNumber , LatestVersionNumber
+      Tags:
+        - PropagateAtLaunch: true
+          Key: Name
+          Value: !Ref InstanceName
+      # TargetGroupARNs:
+      #   - String
+      VPCZoneIdentifier: !Ref SubnetIds
+
+  #
+  # Warm Pool
+  #
+  WarmPool:
+    Type: AWS::AutoScaling::WarmPool
+    Properties:
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      InstanceReusePolicy:
+        ReuseOnScaleIn: true
+      MaxGroupPreparedCapacity: 3
+      MinSize: 3
+      PoolState: Stopped # Hibernated | Running | Stopped

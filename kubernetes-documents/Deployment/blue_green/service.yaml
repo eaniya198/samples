@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-service
+spec:
+  ports:
+    - port: 80
+      targetPort: 8080
+  selector:
+    app: test-pod
+    color: blue
+
+# blue green 배포는 deployment에 color: blue, color: green 이라는 label을 달아주고 apply 해준 뒤 service의 selector에 color: xxxxx 부분만 변경해주면 끝이다.
