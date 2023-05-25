@@ -8,6 +8,8 @@ mv ./kubectl /usr/bin/
 
 curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
+# curl -L https://git.io/get_helm.sh | bash -s -- --version v3.8.2
+
 ###### Helm Downgrade #######
 ## initArch() {
 ##   ARCH=$(uname -m)
