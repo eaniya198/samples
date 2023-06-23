@@ -1,0 +1,2 @@
+$ sudo curl -sfL httpget.kubearmor.io  sudo sh -s -- -b usrlocalbin
+$ karmor install

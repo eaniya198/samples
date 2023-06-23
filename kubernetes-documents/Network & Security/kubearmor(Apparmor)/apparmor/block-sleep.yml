@@ -1,0 +1,16 @@
+apiVersion: security.kubearmor.com/v1
+kind: KubeArmorPolicy
+metadata:
+  name: ksp-group-1-proc-path-block
+  namespace: green
+spec:
+  severity: 5
+  message: "block /bin/sleep"
+  selector:
+    matchLabels:
+      app: green
+  process:
+    matchPaths:
+    - path: /bin/sleep
+  action:
+    Block
