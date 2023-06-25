@@ -6,6 +6,7 @@
 #!/bin/bash -eux
 # Create namespace
 kubectl create namespace amazon-cloudwatch || true
+CLUSTER="day1-cluster"
 
 # Create configmap
 ClusterName=$CLUSTER
@@ -24,10 +25,10 @@ kubectl create configmap fluent-bit-cluster-info \
 
 # Create IRSA for fluent bit
 eksctl create iamserviceaccount \
---cluster=$CLUSTER \
---namespace=amazon-cloudwatch \
---name=fluent-bit \
---attach-policy-arn=arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy \
+--cluster $CLUSTER \
+--namespace amazon-cloudwatch \
+--name fluent-bit \
+--attach-policy-arn arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy \
 --override-existing-serviceaccounts \
 --approve
 

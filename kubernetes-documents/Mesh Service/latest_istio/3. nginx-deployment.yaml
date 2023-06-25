@@ -1,0 +1,92 @@
+# This is a Kubernetes deployment configuration file for nginx version 1
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-v1
+  namespace: web
+  labels:
+    app: nginx
+    version: v1
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+      version: v1   # The first version
+  replicas: 2       # tells deployment to run 2 pods matching the template
+  template:
+    metadata:
+      labels:
+        app: nginx
+        version: v1
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+---
+# This is a Kubernetes deployment configuration file for nginx version 2
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-v2
+  namespace: web
+  labels:
+    app: nginx
+    version: v2
+spec:
+  selector:
+    matchLabels:  
+      app: nginx
+      version: v2   # Second version
+  replicas: 2       # tells deployment to run 2 pods matching the template
+  template:
+    metadata:
+      labels:
+        app: nginx
+        version: v2
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-page
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: nginx-page
+        configMap:
+          name: nginx-config
+
+---
+# This is a Kubernetes ConfigMap that contains the HTML content for the second version of the nginx server.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: web
+data:
+  version2: |
+    <html>
+    <body>
+      <h1>Hello nginx Version2 Server</h1>
+    </body>
+    </html>
+
+---
+# This is a Kubernetes Service that exposes the nginx deployments.
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  namespace: web
+  labels:
+      app: nginx
+spec:
+  selector:
+    app: nginx
+  ports:
+  - port: 80
+

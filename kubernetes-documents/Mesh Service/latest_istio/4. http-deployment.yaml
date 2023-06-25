@@ -1,0 +1,89 @@
+# This is a Kubernetes deployment configuration file for httpd version 1
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpd-v1
+  namespace: web
+  labels:
+    app: httpd
+    version: v1
+spec:
+  selector:
+    matchLabels:
+      app: httpd
+      version: v1   # The first version
+  replicas: 2       # tells deployment to run 2 pods matching the template
+  template:
+    metadata:
+      labels:
+        app: httpd
+        version: v1
+    spec:
+      containers:
+      - name: httpd
+        image: httpd:latest
+        ports:
+        - containerPort: 80
+---
+# This is a Kubernetes deployment configuration file for httpd version 2
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpd-v2
+  namespace: web
+  labels:
+    app: httpd
+    version: v2
+spec:
+  selector:
+    matchLabels:  
+      app: httpd
+      version: v2   # Second version
+  replicas: 2       # tells deployment to run 2 pods matching the template
+  template:
+    metadata:
+      labels:
+        app: httpd
+        version: v2
+    spec:
+      containers:
+      - name: httpd
+        image: httpd:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: httpd-page
+          mountPath: /usr/local/apache2/htdocs/
+      volumes:
+      - name: httpd-page
+        configMap:
+          name: httpd-config
+---
+# This is a Kubernetes ConfigMap that contains the HTML content for the second version of the httpd server.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: httpd-config
+  namespace: web
+data:
+  v2: |
+    <html>
+    <body>
+      <h1>Hello httpd V2 Server</h1>
+    </body>
+    </html>
+---
+# This is a Kubernetes Service that exposes the httpd deployments.
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd
+  namespace: web
+  labels:
+      app: httpd
+spec:
+  selector:
+    app: httpd
+  ports:
+  - port: 80
+

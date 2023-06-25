@@ -1,0 +1,30 @@
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualRouter
+metadata:
+  name: web-static-router
+  namespace: web
+spec:
+  awsName: web-static-virtual-router
+  listeners:
+    - portMapping:
+        port: 80
+        protocol: http
+  routes:
+    - name: web-static-route
+      httpRoute:
+        match:
+          prefix: "/"
+        action:
+          weightedTargets:
+            - virtualNodeRef:
+                name: "web-static-frontend"
+              weight: 100
+        retryPolicy:
+          maxRetries: 2
+          perRetryTimeout:
+              unit: "ms"
+              value: 2000
+          httpRetryEvents:
+              - server-error
+              - client-error
+              - gateway-error

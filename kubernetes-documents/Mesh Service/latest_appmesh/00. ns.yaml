@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: web
+  labels:
+    appmesh.k8s.aws/sidecarInjectorWebhook: enabled
+    kubernetes.io/metadata.name: web
+    mesh: web

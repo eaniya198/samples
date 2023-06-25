@@ -1,0 +1,57 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+# kubectl patch deployment coredns \
+#     -n kube-system \
+#     --type json \
+#     -p='[{"op": "remove", "path": "/spec/template/metadata/annotations/eks.amazonaws.com~1compute-type"}]'
+
+metadata:
+  name: day1-cluster
+  region: ap-northeast-2
+  version: "1.26"
+
+vpc:
+  subnets:
+    public:
+      public-a: { id: subnet-098b2dd473709301a }
+      public-b: { id: subnet-0b216419379f9dbca }
+    private:
+      private-a: { id: subnet-0d297c443b5125fac }
+      private-b: { id: subnet-0a4a475d34641af0f }
+
+iamIdentityMappings:
+  - arn: arn:aws:iam::216713689620:role/poweruser
+    groups:
+      - system:masters
+    username: admin
+    noDuplicateARNs: true # prevents shadowing of ARNs
+
+fargateProfiles:
+  - name: day1-cert-manager
+    selectors:
+      - namespace: "cert-manager"
+
+  - name: day1-default
+    selectors:
+      - namespace: "default"
+
+  - name: day1-kube-node-lease
+    selectors:
+      - namespace: "kube-node-lease"
+
+  - name: day1-kube-public
+    selectors:
+      - namespace: "kube-public"
+
+  - name: day1-kube-system
+    selectors:
+      - namespace: "kube-system"
+
+  - name: day1-app
+    selectors:
+      - namespace: "app"
+
+  - name: day1-amazon-cloudwatch
+    selectors:
+      - namespace: "amazon-cloudwatch"

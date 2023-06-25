@@ -1,0 +1,25 @@
+# This is an IstioOperator configuration file
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+spec:
+  values:
+    gateways:
+      istio-ingressgateway:
+        # Set the AWS load balancer type to "nlb" (Network Load Balancer)
+        serviceAnnotations:
+          service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+
+
+# istioctl upgrade -f istio_enable_nlb.yaml
+
+# kubectl edit -n istio-system svc/istio-ingressgateway
+  # - name: https
+  #   nodePort: 32086
+  #   port: 443
+  #   protocol: TCP
+  #   targetPort: 8443
+# :x
+
+# annotations
+# https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.4/guide/service/nlb/
+

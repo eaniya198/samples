@@ -8,7 +8,8 @@ $ helm repo add eks https://aws.github.io/eks-charts
 $ kubectl create ns appmesh-system
 $ helm upgrade -i appmesh-controller eks/appmesh-controller -n appmesh-system \
 --set serviceAccount.create=false \
---set serviceAccount.name=appmesh-controller
+--set serviceAccount.name=appmesh-controller \ 
+--set regoin=ap-northeast-2
 $ kubectl get pods -n appmesh-system
 ```
 

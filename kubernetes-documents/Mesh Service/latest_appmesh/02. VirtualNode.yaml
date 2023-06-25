@@ -1,0 +1,40 @@
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualNode
+metadata:
+  name: web-static-frontend   # 대부분의 REF 또는 호출 할 때 해당 이름 사용
+  namespace: web
+spec:
+  awsName: web-static-virtual-node
+  podSelector:
+    matchLabels:
+      app: static
+  listeners:
+    - portMapping:
+        port: 80
+        protocol: http
+      healthCheck:
+        path: "/"
+        protocol: http
+        healthyThreshold: 2
+        unhealthyThreshold: 3
+        intervalMillis: 10000 # 10s
+        timeoutMillis: 5000 # 5s
+      timeout:
+        http:
+          perRequest:
+            unit: "ms"
+            value: 5000 # 5s
+          # idle:
+          #   unit: "ms"
+          #   value: 10000 # 10s
+  serviceDiscovery:
+    awsCloudMap:
+      namespaceName: "day1.local"
+      serviceName: "static-svc"
+      attributes:
+        - key: version
+          value: "0.1"
+  logging:
+    accessLog:
+      file:
+        path: "/dev/stdout"

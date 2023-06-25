@@ -1,0 +1,39 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: app-gateway # Gateway name
+  namespace: default # Namespace
+spec:
+  selector:
+    istio: ingressgateway # Label of pod to select
+  servers:
+  - port:
+      number: 80 # Port number
+      name: http # Port name
+      protocol: HTTP # Protocol
+    hosts:
+    - "*"
+---
+# This is an Istio VirtualService configuration file
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: virtual-svc
+  namespace: default
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - app-gateway
+  http:
+
+# Route traffic to the nginx service when the URL path is /version2
+  - route:
+    - destination:
+        host: static-svc # insert service name
+        port:
+          number: 80
+      weight: 100
+    match:
+    - uri:
+        exact: /

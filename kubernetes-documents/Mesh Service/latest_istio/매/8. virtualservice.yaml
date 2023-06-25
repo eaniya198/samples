@@ -1,0 +1,50 @@
+# Istio VirtualService configuration
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: virtual-svc
+  namespace: default
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - app-gateway
+  http:
+
+# # Route traffic to nginx v2 when URL path is /version2
+#   - route:
+#     - destination:
+#         host: nginx
+#         subset: v2 # Specify the subset to route traffic to
+#         port:
+#           number: 80
+#       weight: 100
+#     match:
+#     - uri:
+#         exact: /version2
+
+# # Route traffic to httpd v2 when URL path is /v2
+#   - route:
+#     - destination:
+#         host: httpd
+#         subset: v2 # Specify the subset to route traffic to
+#         port:
+#           number: 80
+#       weight: 100
+#     match:
+#     - uri:
+#         exact: /v2
+
+# # Route traffic to both nginx v1 and httpd v1 when URL path is /
+# # Traffic is split evenly between the two services (50/50)
+  - route:
+    - destination:
+        host: nginx # insert destination rule names
+        subset: v1 # Specify the subset to route traffic to
+        port:
+          number: 80
+      weight: 100
+    match:
+    - uri:
+        exact: /
+

@@ -1,0 +1,11 @@
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualService
+metadata:
+  name: web-static-virtual-service
+  namespace: web
+spec:
+  awsName: web-static.day1.local
+  provider:
+    virtualRouter:
+      virtualRouterRef:
+        name: web-static-router

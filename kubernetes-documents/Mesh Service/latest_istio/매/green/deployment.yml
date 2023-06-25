@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: static-deployment
+  namespace: default
+  labels:
+    app: static
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: static
+  template:
+    metadata:
+      labels:
+        app: static
+        version: '0.1'
+    spec:
+      containers:
+      - name: static
+        image: ghcr.io/dispiny/hello:nginx
+        ports:
+        - containerPort: 80
+        securityContext:
+          capabilities:
+            drop: ["NET_ADMIN"]
